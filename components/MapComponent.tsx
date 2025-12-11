@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { Locate } from 'lucide-react';
 import { Driver, Ride, DriverStatus, RideStatus } from '../types';
 import { MAP_CENTER } from '../constants';
 import { translations } from '../utils/translations';
@@ -49,6 +50,43 @@ const MapUpdater: React.FC<{ center: { lat: number, lng: number } }> = ({ center
   return null;
 }
 
+const LocateControl: React.FC<{ lang: 'fa' | 'en' }> = ({ lang }) => {
+  const map = useMap();
+  const t = translations[lang];
+
+  const handleLocate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map.flyTo([latitude, longitude], 15);
+      },
+      () => {
+        alert(lang === 'fa' ? 'دسترسی به موقعیت مکانی امکان‌پذیر نیست' : 'Could not get your location');
+      }
+    );
+  };
+
+  return (
+    <div className="absolute bottom-4 right-4 z-[1000]">
+      <button 
+        type="button"
+        onClick={handleLocate}
+        className="bg-white dark:bg-slate-800 p-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-2"
+        title={t.locateMe}
+      >
+        <Locate className="w-5 h-5" />
+      </button>
+    </div>
+  );
+};
+
 export const MapComponent: React.FC<MapComponentProps> = ({ drivers, rides, isDarkMode, lang = 'fa' }) => {
   const t = translations[lang];
   const activeRides = rides.filter(r => r.status !== RideStatus.COMPLETED && r.status !== RideStatus.CANCELLED);
@@ -66,6 +104,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({ drivers, rides, isDa
         />
         
         <MapUpdater center={MAP_CENTER} />
+        <LocateControl lang={lang} />
 
         {/* Drivers */}
         {drivers.map(driver => (

@@ -17,18 +17,21 @@ import {
   MoreVertical,
   CheckCircle,
   XCircle,
-  Power
+  Power,
+  MapPin
 } from 'lucide-react';
 
 import { Ride, Driver, RideStatus, DriverStatus, Customer, Store } from './types';
-import { INITIAL_DRIVERS, INITIAL_RIDES, INITIAL_CUSTOMERS, INITIAL_STORES } from './constants';
+import { db } from './services/database'; // Import Database
 import { StatCard } from './components/StatCard';
-import { MapComponent } from './components/MapComponent';
+// MapComponent removed from dashboard usage but kept if needed elsewhere, 
+// though we use OrderMapPicker for selection now.
 import { RideList } from './components/RideList';
 import { DriverList } from './components/DriverList';
 import { AIChatInput } from './components/AIChatInput';
 import { Auth } from './components/Auth';
 import { Modal } from './components/Modal';
+import { OrderMapPicker } from './components/OrderMapPicker';
 import { translations } from './utils/translations';
 
 function App() {
@@ -38,22 +41,48 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [lang, setLang] = useState<'fa' | 'en'>('fa');
   
-  // Data State
-  const [rides, setRides] = useState<Ride[]>(INITIAL_RIDES);
-  const [drivers, setDrivers] = useState<Driver[]>(INITIAL_DRIVERS);
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-  const [stores, setStores] = useState<Store[]>(INITIAL_STORES);
+  // Data State - Loaded from "Database"
+  const [rides, setRides] = useState<Ride[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'ADD_DRIVER' | 'ADD_CUSTOMER' | 'ADD_STORE' | 'EDIT_STORE' | 'ADD_ORDER' | null>(null);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  // Form States (Temporary)
+  // Form States
   const [formData, setFormData] = useState<any>({});
+  
+  // Map Picker State for Order Modal
+  const [mapPickerMode, setMapPickerMode] = useState<'pickup' | 'dropoff' | null>(null);
+  const [mapCoords, setMapCoords] = useState<{ pickup: {lat: number, lng: number} | null, dropoff: {lat: number, lng: number} | null }>({ pickup: null, dropoff: null });
 
   const t = translations[lang];
   const isRTL = lang === 'fa';
+
+  // Load Data on Mount
+  useEffect(() => {
+    setDrivers(db.getDrivers());
+    setRides(db.getRides());
+    setCustomers(db.getCustomers());
+    setStores(db.getStores());
+
+    // Check for "Remember Me" session
+    const savedAuth = db.getCredentials();
+    if (savedAuth) {
+        // Optional: Add expiry check here
+        setIsAuthenticated(true);
+        setUserRole(savedAuth.role as any);
+    }
+  }, []);
+
+  // Save Data on Change
+  useEffect(() => { if(drivers.length) db.saveDrivers(drivers); }, [drivers]);
+  useEffect(() => { if(rides.length) db.saveRides(rides); }, [rides]);
+  useEffect(() => { if(customers.length) db.saveCustomers(customers); }, [customers]);
+  useEffect(() => { if(stores.length) db.saveStores(stores); }, [stores]);
 
   // Theme Toggling
   useEffect(() => {
@@ -80,6 +109,7 @@ function App() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUserRole('ADMIN');
+    db.clearCredentials(); // Clear "Remember Me"
   };
 
   // Drivers Management
@@ -168,13 +198,17 @@ function App() {
     const customer = customers.find(c => c.id === formData.customerId);
     const store = stores.find(s => s.id === formData.storeId);
     
+    // Default coords if not picked on map
+    const pickupCoords = mapCoords.pickup || { lat: 35.6892, lng: 51.3890 };
+    const dropoffCoords = mapCoords.dropoff || { lat: 35.7000, lng: 51.4000 };
+
     const newRide: Ride = {
       id: `r${Date.now()}`,
       customerName: customer ? customer.name : (store ? store.name : t.unknown),
       customerId: formData.customerId,
       storeId: formData.storeId,
-      pickup: { lat: 35.6892, lng: 51.3890, address: formData.pickupAddress || (store?.address || 'Tehran') },
-      dropoff: { lat: 35.7000, lng: 51.4000, address: formData.dropoffAddress || (customer?.address || 'Tehran') },
+      pickup: { ...pickupCoords, address: formData.pickupAddress || (store?.address || 'Tehran') },
+      dropoff: { ...dropoffCoords, address: formData.dropoffAddress || (customer?.address || 'Tehran') },
       status: RideStatus.PENDING,
       price: Number(formData.price) || 50000,
       requestedAt: new Date(),
@@ -214,7 +248,7 @@ function App() {
     if (ride && ride.driverId) {
       setDrivers(prev => prev.map(d => d.id === ride.driverId ? { ...d, status: DriverStatus.AVAILABLE, currentRideId: undefined } : d));
     }
-    setRides(prev => prev.filter(r => r.id !== rideId)); // Delete completely or just set to CANCELLED? User asked for Delete Order.
+    setRides(prev => prev.filter(r => r.id !== rideId));
   };
 
   // Modal Helpers
@@ -222,6 +256,9 @@ function App() {
     setModalType(type);
     setSelectedItem(item);
     setFormData(item || {});
+    // Reset map picker
+    setMapCoords({ pickup: null, dropoff: null });
+    setMapPickerMode(null);
     setIsModalOpen(true);
   };
 
@@ -235,19 +272,31 @@ function App() {
   // View Components
 
   const renderDashboard = () => (
-    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-230px)]">
-      <div className={`w-full lg:w-1/3 flex flex-col lg:h-full`}>
-        <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex-1 flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
-             <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">{t.pendingRides}</h3>
-             <button onClick={() => openModal('ADD_ORDER')} className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                <Plus className="w-4 h-4" />
+    <div className="flex flex-col h-[calc(100vh-140px)]">
+        {/* Top Section: AI Input */}
+        <div className="mb-6 w-full max-w-4xl mx-auto">
+             <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
+        </div>
+
+        {/* Full Width Order List */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex-1 flex flex-col overflow-hidden max-w-6xl mx-auto w-full">
+          <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
+             <div className="flex items-center gap-3">
+                 <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600">
+                     <Package className="w-5 h-5" />
+                 </div>
+                 <div>
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{t.activeRides}</h3>
+                    <p className="text-xs text-slate-500">{t.pendingRides}: {rides.filter(r => r.status === RideStatus.PENDING).length}</p>
+                 </div>
+             </div>
+             <button onClick={() => openModal('ADD_ORDER')} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">
+                <Plus className="w-4 h-4" /> {t.add}
              </button>
           </div>
-          <div className="p-2 flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
              <RideList 
-               rides={rides.filter(r => r.status === RideStatus.PENDING || r.status === RideStatus.IN_PROGRESS)} 
+               rides={rides.filter(r => r.status === RideStatus.PENDING || r.status === RideStatus.IN_PROGRESS || r.status === RideStatus.ASSIGNED)} 
                drivers={drivers}
                onAssignDriver={handleAssignDriver}
                onCancelRide={handleCancelRide}
@@ -255,12 +304,6 @@ function App() {
              />
           </div>
         </div>
-      </div>
-      <div className={`w-full lg:w-2/3 lg:h-full hidden lg:block`}>
-         <div className="h-full w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
-            <MapComponent drivers={drivers} rides={rides} isDarkMode={isDarkMode} lang={lang} />
-         </div>
-      </div>
     </div>
   );
 
@@ -487,6 +530,8 @@ function App() {
          t.manualOrder
       } lang={lang}>
          
+         {/* ... Driver, Customer, Store Forms remain same ... */}
+
          {modalType === 'ADD_DRIVER' && (
            <form onSubmit={handleAddDriver} className="space-y-4">
               <div><label className={labelClass}>{t.name}</label><input required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} /></div>
@@ -540,9 +585,42 @@ function App() {
                     </select>
                   </div>
                </div>
-               <div><label className={labelClass}>{t.pickup}</label><input value={formData.pickupAddress || ''} onChange={e => setFormData({...formData, pickupAddress: e.target.value})} className={inputClass} /></div>
-               <div><label className={labelClass}>{t.dropoff}</label><input value={formData.dropoffAddress || ''} onChange={e => setFormData({...formData, dropoffAddress: e.target.value})} className={inputClass} /></div>
-               <div className="grid grid-cols-2 gap-3">
+               
+               {/* Location Inputs */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                   <div>
+                       <label className={labelClass} style={{color: '#3b82f6'}}>{t.pickup} (آبی)</label>
+                       <div className="flex gap-2">
+                           <input value={formData.pickupAddress || ''} onChange={e => setFormData({...formData, pickupAddress: e.target.value})} className={inputClass} placeholder={t.pickup} />
+                           <button type="button" onClick={() => setMapPickerMode('pickup')} className={`p-2 rounded-lg border transition-colors ${mapPickerMode === 'pickup' ? 'bg-blue-100 border-blue-500 text-blue-600' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                               <MapPin className="w-5 h-5" />
+                           </button>
+                       </div>
+                   </div>
+                   <div>
+                       <label className={labelClass} style={{color: '#ec4899'}}>{t.dropoff} (صورتی)</label>
+                       <div className="flex gap-2">
+                           <input value={formData.dropoffAddress || ''} onChange={e => setFormData({...formData, dropoffAddress: e.target.value})} className={inputClass} placeholder={t.dropoff} />
+                           <button type="button" onClick={() => setMapPickerMode('dropoff')} className={`p-2 rounded-lg border transition-colors ${mapPickerMode === 'dropoff' ? 'bg-pink-100 border-pink-500 text-pink-600' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                               <MapPin className="w-5 h-5" />
+                           </button>
+                       </div>
+                   </div>
+               </div>
+
+               {/* Map Picker */}
+               <OrderMapPicker 
+                 pickup={mapCoords.pickup}
+                 dropoff={mapCoords.dropoff}
+                 mode={mapPickerMode}
+                 lang={lang}
+                 onSetLocation={(type, lat, lng) => {
+                     setMapCoords(prev => ({ ...prev, [type]: { lat, lng } }));
+                     // Optionally reverse geocode here if you had an API
+                 }}
+               />
+
+               <div className="grid grid-cols-2 gap-3 mt-3">
                   <div><label className={labelClass}>{t.price}</label><input type="number" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className={inputClass} /></div>
                   <div>
                     <label className={labelClass}>{t.priority.NORMAL}</label>

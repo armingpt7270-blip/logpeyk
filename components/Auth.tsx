@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { User, Truck, Store, Lock, ArrowLeft, Phone, MapPin, Eye, EyeOff, CheckSquare, Square, Mail, Fingerprint, PhoneCall, Locate } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Truck, Store, Lock, ArrowLeft, Phone, MapPin, Eye, EyeOff, CheckSquare, Square, Mail, Fingerprint, PhoneCall, Locate, Car } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { translations } from '../utils/translations';
 import { MAP_CENTER } from '../constants';
+import { db } from '../services/database'; // Import Database
 
 // Fix Leaflet marker icon safely
 const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
@@ -91,7 +92,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
   const [error, setError] = useState('');
 
   // Registration State
-  const [regData, setRegData] = useState({
+  const initialRegData = {
     name: '', // Full Name or Store Name
     ownerName: '', // For Store
     emailOrUser: '',
@@ -103,13 +104,29 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
     confirmPassword: '',
     address: '',
     location: null as { lat: number, lng: number } | null
-  });
+  };
+  const [regData, setRegData] = useState(initialRegData);
+
+  // Check storage on mount
+  useEffect(() => {
+    const creds = db.getCredentials();
+    if (creds) {
+       // Auto-fill logic could go here or direct login in App.tsx
+       setUsername(creds.username || '');
+    }
+  }, []);
+
+  const resetForm = () => {
+    setRegData(initialRegData);
+    setError('');
+  };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (username === 'armin7270' && password === 'ARmin@#8840028*') {
+      if (rememberMe) db.saveCredentials(username, 'ADMIN');
       onLogin('ADMIN');
       return;
     }
@@ -119,42 +136,48 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
       return;
     }
 
+    let role: 'STORE' | 'DRIVER' = 'DRIVER';
     if (username.toLowerCase().includes('store') || username.toLowerCase().includes('shop')) {
-        onLogin('STORE');
-    } else {
-        onLogin('DRIVER');
-    }
+        role = 'STORE';
+    } 
+    
+    if (rememberMe) db.saveCredentials(username, role);
+    onLogin(role);
   };
 
   const handleRegisterSubmit = (e: React.FormEvent, isDriver: boolean) => {
     e.preventDefault();
     setError('');
 
-    // Basic Validation
-    if (regData.password !== regData.confirmPassword) {
-      setError(t.passwordsNotMatch);
-      return;
-    }
-    
-    if (!regData.mobile || !regData.emailOrUser || !regData.password || !regData.address || !regData.location) {
+    // Common Validation
+    if (!regData.name || !regData.mobile || !regData.emailOrUser || !regData.password || !regData.address || !regData.location) {
       setError(t.fillAll);
       return;
     }
 
-    if (isDriver && !regData.nationalId) {
-      setError(t.fillAll);
+    if (regData.password !== regData.confirmPassword) {
+      setError(t.passwordsNotMatch);
       return;
+    }
+
+    // Specific Validation
+    if (isDriver) {
+        if (!regData.nationalId || !regData.vehicleType) {
+            setError(t.fillAll);
+            return;
+        }
+    } else {
+        // Store
+        if (!regData.ownerName) {
+            setError(t.fillAll);
+            return;
+        }
     }
 
     // Success Simulation
     alert(lang === 'fa' ? 'اطلاعات با موفقیت ثبت شد.' : 'Registration successful.');
     setView('LOGIN');
-    // Reset form
-    setRegData({
-      name: '', ownerName: '', emailOrUser: '', mobile: '', landline: '', 
-      nationalId: '', vehicleType: 'Motor', password: '', confirmPassword: '', 
-      address: '', location: null
-    });
+    resetForm();
   };
 
   const isRTL = lang === 'fa';
@@ -224,7 +247,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
       
       <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 text-center">{t.registerTitle}</h3>
 
-      <button onClick={() => { setRegData({...regData, name: '', location: null}); setView('REGISTER_DRIVER'); }} className="w-full flex items-center p-4 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-right shadow-sm hover:shadow-md">
+      <button onClick={() => { resetForm(); setView('REGISTER_DRIVER'); }} className="w-full flex items-center p-4 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-right shadow-sm hover:shadow-md">
           <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors ml-4">
               <Truck className="w-6 h-6" />
           </div>
@@ -234,7 +257,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
           </div>
       </button>
 
-      <button onClick={() => { setRegData({...regData, name: '', location: null}); setView('REGISTER_STORE'); }} className="w-full flex items-center p-4 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-right shadow-sm hover:shadow-md">
+      <button onClick={() => { resetForm(); setView('REGISTER_STORE'); }} className="w-full flex items-center p-4 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-right shadow-sm hover:shadow-md">
           <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors ml-4">
               <Store className="w-6 h-6" />
           </div>
@@ -296,7 +319,19 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
             <input type="tel" value={regData.mobile} onChange={e => setRegData({...regData, mobile: e.target.value})} className={`w-full py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm dark:text-white text-right ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`} dir="ltr" placeholder="09..." />
             </InputWrapper>
         </div>
-        {!isDriver && (
+        {isDriver ? (
+            <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">{t.vehicleType}</label>
+                <InputWrapper>
+                    <Car className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
+                    <select value={regData.vehicleType} onChange={e => setRegData({...regData, vehicleType: e.target.value})} className={`w-full py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm dark:text-white ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`}>
+                        <option value="Motor">{t.vehicle.motor}</option>
+                        <option value="Car">{t.vehicle.car}</option>
+                        <option value="Van">{t.vehicle.van}</option>
+                    </select>
+                </InputWrapper>
+            </div>
+        ) : (
              <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">{t.landline}</label>
                 <InputWrapper>
@@ -368,31 +403,33 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
   );
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 relative overflow-hidden">
-       {/* Background decoration */}
-       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 -z-20"></div>
-       <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
-       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl -z-10"></div>
+    <div className="fixed inset-0 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+       <div className="min-h-full flex items-center justify-center p-4 relative">
+         {/* Background decoration */}
+         <div className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 -z-20 pointer-events-none"></div>
+         <div className="fixed -top-24 -right-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+         <div className="fixed -bottom-24 -left-24 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-       <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="p-8">
-             {/* Logo Header */}
-             <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-600/20 mb-4 transform rotate-3 hover:rotate-6 transition-transform duration-300">
-                  <Truck className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">{t.appTitle}</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t.subtitle}</p>
-             </div>
+         <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="p-8">
+               {/* Logo Header */}
+               <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-600/20 mb-4 transform rotate-3 hover:rotate-6 transition-transform duration-300">
+                    <Truck className="w-8 h-8 text-white" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">{t.appTitle}</h1>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t.subtitle}</p>
+               </div>
 
-             {/* Dynamic Content */}
-             <div className="relative min-h-[300px]">
-                {view === 'LOGIN' && renderLogin()}
-                {view === 'REGISTER_SELECTION' && renderRegisterSelection()}
-                {view === 'REGISTER_DRIVER' && renderRegistrationForm(true)}
-                {view === 'REGISTER_STORE' && renderRegistrationForm(false)}
-             </div>
-          </div>
+               {/* Dynamic Content */}
+               <div className="relative min-h-[300px]">
+                  {view === 'LOGIN' && renderLogin()}
+                  {view === 'REGISTER_SELECTION' && renderRegisterSelection()}
+                  {view === 'REGISTER_DRIVER' && renderRegistrationForm(true)}
+                  {view === 'REGISTER_STORE' && renderRegistrationForm(false)}
+               </div>
+            </div>
+         </div>
        </div>
     </div>
   );

@@ -23,6 +23,7 @@ export interface Customer {
   name: string;
   phone: string;
   address: string;
+  location?: { lat: number; lng: number }; // Added precise location
 }
 
 export interface Store {

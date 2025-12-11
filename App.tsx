@@ -33,6 +33,7 @@ import { AIChatInput } from './components/AIChatInput';
 import { Auth } from './components/Auth';
 import { Modal } from './components/Modal';
 import { OrderMapPicker } from './components/OrderMapPicker';
+import { LocationMapPicker } from './components/LocationMapPicker';
 import { translations } from './utils/translations';
 
 function App() {
@@ -155,7 +156,8 @@ function App() {
       id: `c${Date.now()}`,
       name: formData.name,
       phone: formData.phone,
-      address: formData.address
+      address: formData.address,
+      location: formData.location // Save map location
     };
     setCustomers([...customers, newCustomer]);
     closeModal();
@@ -199,9 +201,12 @@ function App() {
     const customer = customers.find(c => c.id === formData.customerId);
     const store = stores.find(s => s.id === formData.storeId);
     
-    // Default coords if not picked on map
+    // Default coords: Use Map Picker > Customer Stored Location > Default Tehran
     const pickupCoords = mapCoords.pickup || { lat: 35.6892, lng: 51.3890 };
-    const dropoffCoords = mapCoords.dropoff || { lat: 35.7000, lng: 51.4000 };
+    
+    // For dropoff, if map isn't picked, try to use customer's stored location
+    const defaultDropoff = customer?.location || { lat: 35.7000, lng: 51.4000 };
+    const dropoffCoords = mapCoords.dropoff || defaultDropoff;
 
     const newRide: Ride = {
       id: `r${Date.now()}`,
@@ -257,9 +262,20 @@ function App() {
     setModalType(type);
     setSelectedItem(item);
     setFormData(item || {});
-    // Reset map picker
+    // Reset map picker for orders
     setMapCoords({ pickup: null, dropoff: null });
     setMapPickerMode(null);
+    
+    // Auto-fill map coords if creating order from customer/store with known location
+    if (type === 'ADD_ORDER') {
+       if (item?.customerId) {
+           const c = customers.find(cust => cust.id === item.customerId);
+           if (c && c.location) {
+               setMapCoords(prev => ({ ...prev, dropoff: c.location! }));
+           }
+       }
+    }
+    
     setIsModalOpen(true);
   };
 
@@ -557,6 +573,17 @@ function App() {
               <div><label className={labelClass}>{t.name}</label><input required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} /></div>
               <div><label className={labelClass}>{t.phone}</label><input required value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className={inputClass} dir="ltr" /></div>
               <div><label className={labelClass}>{t.address}</label><textarea required value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className={inputClass} rows={2} /></div>
+              
+              {/* Location Picker for Customer */}
+              <div>
+                  <label className={labelClass}>{t.selectMap}</label>
+                  <LocationMapPicker 
+                     location={formData.location || null} 
+                     onLocationSelect={(lat, lng) => setFormData({...formData, location: { lat, lng }})} 
+                     lang={lang} 
+                  />
+              </div>
+
               <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold mt-4">{t.save}</button>
            </form>
          )}
@@ -576,7 +603,20 @@ function App() {
                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={labelClass}>{t.selectCustomer}</label>
-                    <select value={formData.customerId || ''} onChange={e => setFormData({...formData, customerId: e.target.value, storeId: undefined})} className={inputClass} disabled={!!formData.storeId}>
+                    <select 
+                      value={formData.customerId || ''} 
+                      onChange={e => {
+                         const c = customers.find(cust => cust.id === e.target.value);
+                         const update = { customerId: e.target.value, storeId: undefined };
+                         if(c && c.location) {
+                             // Auto-set dropoff on map
+                             setMapCoords(prev => ({ ...prev, dropoff: c.location! }));
+                         }
+                         setFormData({...formData, ...update});
+                      }} 
+                      className={inputClass} 
+                      disabled={!!formData.storeId}
+                    >
                       <option value="">--</option>
                       {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>

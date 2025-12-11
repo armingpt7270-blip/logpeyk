@@ -22,9 +22,12 @@ export const translations = {
     submitReg: 'ثبت درخواست',
     dashboard: 'داشبورد',
     drivers: 'سفیران',
+    customers: 'مشتریان',
+    stores: 'فروشگاه‌ها',
+    orders: 'سفارشات',
     logout: 'خروج',
     settings: 'تنظیمات',
-    search: 'جستجوی سفارش...',
+    search: 'جستجو...',
     activeRides: 'سفرهای فعال',
     availDrivers: 'سفیران در دسترس',
     todayRides: 'سفرهای امروز',
@@ -39,6 +42,14 @@ export const translations = {
     unknown: 'ناشناس',
     pickup: 'مبدا',
     dropoff: 'مقصد',
+    add: 'افزودن',
+    edit: 'ویرایش',
+    delete: 'حذف',
+    save: 'ذخیره',
+    name: 'نام',
+    phone: 'تلفن',
+    owner: 'مدیریت',
+    action: 'عملیات',
     status: {
       PENDING: 'در انتظار',
       ASSIGNED: 'تخصیص یافته',
@@ -53,7 +64,17 @@ export const translations = {
       NORMAL: 'عادی',
       HIGH: 'بالا',
       URGENT: 'فوری'
-    }
+    },
+    vehicle: {
+      motor: 'موتورسیکلت',
+      car: 'سواری',
+      van: 'وانت'
+    },
+    selectCustomer: 'انتخاب مشتری',
+    selectStore: 'انتخاب فروشگاه',
+    manualOrder: 'ثبت سفارش دستی',
+    price: 'مبلغ (تومان)',
+    toggleStatus: 'تغییر وضعیت'
   },
   en: {
     appTitle: 'Fleet Dispatch AI',
@@ -78,9 +99,12 @@ export const translations = {
     submitReg: 'Submit Request',
     dashboard: 'Dashboard',
     drivers: 'Drivers',
+    customers: 'Customers',
+    stores: 'Stores',
+    orders: 'Orders',
     logout: 'Logout',
     settings: 'Settings',
-    search: 'Search orders...',
+    search: 'Search...',
     activeRides: 'Active Rides',
     availDrivers: 'Available Drivers',
     todayRides: 'Today\'s Rides',
@@ -95,6 +119,14 @@ export const translations = {
     unknown: 'Unknown',
     pickup: 'Pickup',
     dropoff: 'Dropoff',
+    add: 'Add',
+    edit: 'Edit',
+    delete: 'Delete',
+    save: 'Save',
+    name: 'Name',
+    phone: 'Phone',
+    owner: 'Owner',
+    action: 'Actions',
     status: {
       PENDING: 'Pending',
       ASSIGNED: 'Assigned',
@@ -109,6 +141,16 @@ export const translations = {
       NORMAL: 'Normal',
       HIGH: 'High',
       URGENT: 'Urgent'
-    }
+    },
+    vehicle: {
+      motor: 'Motorcycle',
+      car: 'Car',
+      van: 'Van'
+    },
+    selectCustomer: 'Select Customer',
+    selectStore: 'Select Store',
+    manualOrder: 'Manual Order',
+    price: 'Price',
+    toggleStatus: 'Toggle Status'
   }
 };

@@ -9,28 +9,48 @@ import {
   LogOut,
   Moon,
   Sun,
-  Globe
+  Store as StoreIcon,
+  Package,
+  Plus,
+  Trash2,
+  Edit,
+  MoreVertical,
+  CheckCircle,
+  XCircle,
+  Power
 } from 'lucide-react';
 
-import { Ride, Driver, RideStatus, DriverStatus } from './types';
-import { INITIAL_DRIVERS, INITIAL_RIDES } from './constants';
+import { Ride, Driver, RideStatus, DriverStatus, Customer, Store } from './types';
+import { INITIAL_DRIVERS, INITIAL_RIDES, INITIAL_CUSTOMERS, INITIAL_STORES } from './constants';
 import { StatCard } from './components/StatCard';
 import { MapComponent } from './components/MapComponent';
 import { RideList } from './components/RideList';
 import { DriverList } from './components/DriverList';
 import { AIChatInput } from './components/AIChatInput';
 import { Auth } from './components/Auth';
+import { Modal } from './components/Modal';
 import { translations } from './utils/translations';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<'ADMIN' | 'DRIVER' | 'STORE'>('ADMIN');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'drivers'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'drivers' | 'customers' | 'stores' | 'orders'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [lang, setLang] = useState<'fa' | 'en'>('fa');
   
+  // Data State
   const [rides, setRides] = useState<Ride[]>(INITIAL_RIDES);
   const [drivers, setDrivers] = useState<Driver[]>(INITIAL_DRIVERS);
+  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+  const [stores, setStores] = useState<Store[]>(INITIAL_STORES);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'ADD_DRIVER' | 'ADD_CUSTOMER' | 'ADD_STORE' | 'EDIT_STORE' | 'ADD_ORDER' | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+
+  // Form States (Temporary)
+  const [formData, setFormData] = useState<any>({});
 
   const t = translations[lang];
   const isRTL = lang === 'fa';
@@ -50,11 +70,7 @@ function App() {
     document.documentElement.lang = lang;
   }, [lang, isRTL]);
 
-  // Stats (Using mock numbers for zero data scenario, or just 0)
-  const activeRidesCount = rides.filter(r => r.status === RideStatus.IN_PROGRESS || r.status === RideStatus.PENDING).length;
-  const availableDriversCount = drivers.filter(d => d.status === DriverStatus.AVAILABLE).length;
-  const completedRidesCount = 0; 
-  const totalRevenue = 0; 
+  // --- Actions ---
 
   const handleLogin = (role: 'ADMIN' | 'DRIVER' | 'STORE') => {
     setIsAuthenticated(true);
@@ -66,7 +82,110 @@ function App() {
     setUserRole('ADMIN');
   };
 
-  const handleCreateRide = (rideData: Partial<Ride>) => {
+  // Drivers Management
+  const handleAddDriver = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newDriver: Driver = {
+      id: `d${Date.now()}`,
+      name: formData.name,
+      phone: formData.phone,
+      vehicleType: formData.vehicleType,
+      status: DriverStatus.AVAILABLE,
+      rating: 5.0,
+      avatarUrl: `https://ui-avatars.com/api/?name=${formData.name}&background=random`,
+      location: { lat: 35.6892 + (Math.random() - 0.5) * 0.05, lng: 51.3890 + (Math.random() - 0.5) * 0.05, address: 'Tehran' }
+    };
+    setDrivers([...drivers, newDriver]);
+    closeModal();
+  };
+
+  const handleDeleteDriver = (id: string) => {
+    if (confirm(t.delete + '?')) {
+      setDrivers(drivers.filter(d => d.id !== id));
+    }
+  };
+
+  const handleToggleDriverStatus = (id: string) => {
+    setDrivers(drivers.map(d => {
+      if (d.id === id) {
+        return {
+          ...d,
+          status: d.status === DriverStatus.OFFLINE ? DriverStatus.AVAILABLE : DriverStatus.OFFLINE
+        };
+      }
+      return d;
+    }));
+  };
+
+  // Customers Management
+  const handleAddCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newCustomer: Customer = {
+      id: `c${Date.now()}`,
+      name: formData.name,
+      phone: formData.phone,
+      address: formData.address
+    };
+    setCustomers([...customers, newCustomer]);
+    closeModal();
+  };
+
+  const handleDeleteCustomer = (id: string) => {
+    if (confirm(t.delete + '?')) {
+      setCustomers(customers.filter(c => c.id !== id));
+    }
+  };
+
+  // Stores Management
+  const handleAddStore = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newStore: Store = {
+      id: `s${Date.now()}`,
+      name: formData.name,
+      owner: formData.owner,
+      phone: formData.phone,
+      address: formData.address
+    };
+    setStores([...stores, newStore]);
+    closeModal();
+  };
+
+  const handleEditStore = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStores(stores.map(s => s.id === selectedItem.id ? { ...s, ...formData } : s));
+    closeModal();
+  };
+
+  const handleDeleteStore = (id: string) => {
+    if (confirm(t.delete + '?')) {
+      setStores(stores.filter(s => s.id !== id));
+    }
+  };
+
+  // Orders Management
+  const handleCreateOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    const customer = customers.find(c => c.id === formData.customerId);
+    const store = stores.find(s => s.id === formData.storeId);
+    
+    const newRide: Ride = {
+      id: `r${Date.now()}`,
+      customerName: customer ? customer.name : (store ? store.name : t.unknown),
+      customerId: formData.customerId,
+      storeId: formData.storeId,
+      pickup: { lat: 35.6892, lng: 51.3890, address: formData.pickupAddress || (store?.address || 'Tehran') },
+      dropoff: { lat: 35.7000, lng: 51.4000, address: formData.dropoffAddress || (customer?.address || 'Tehran') },
+      status: RideStatus.PENDING,
+      price: Number(formData.price) || 50000,
+      requestedAt: new Date(),
+      priority: formData.priority || 'NORMAL',
+      notes: formData.notes
+    };
+    setRides([newRide, ...rides]);
+    closeModal();
+  };
+
+  const handleAICreateRide = (rideData: Partial<Ride>) => {
     const newRide: Ride = {
       id: `r${Date.now()}`,
       customerName: rideData.customerName || t.unknown,
@@ -95,36 +214,203 @@ function App() {
     if (ride && ride.driverId) {
       setDrivers(prev => prev.map(d => d.id === ride.driverId ? { ...d, status: DriverStatus.AVAILABLE, currentRideId: undefined } : d));
     }
-    setRides(prev => prev.map(r => r.id === rideId ? { ...r, status: RideStatus.CANCELLED } : r));
+    setRides(prev => prev.filter(r => r.id !== rideId)); // Delete completely or just set to CANCELLED? User asked for Delete Order.
   };
 
+  // Modal Helpers
+  const openModal = (type: typeof modalType, item?: any) => {
+    setModalType(type);
+    setSelectedItem(item);
+    setFormData(item || {});
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalType(null);
+    setSelectedItem(null);
+    setFormData({});
+  };
+
+  // View Components
+
+  const renderDashboard = () => (
+    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-230px)]">
+      <div className={`w-full lg:w-1/3 flex flex-col lg:h-full`}>
+        <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex-1 flex flex-col overflow-hidden">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
+             <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">{t.pendingRides}</h3>
+             <button onClick={() => openModal('ADD_ORDER')} className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                <Plus className="w-4 h-4" />
+             </button>
+          </div>
+          <div className="p-2 flex-1 overflow-y-auto custom-scrollbar">
+             <RideList 
+               rides={rides.filter(r => r.status === RideStatus.PENDING || r.status === RideStatus.IN_PROGRESS)} 
+               drivers={drivers}
+               onAssignDriver={handleAssignDriver}
+               onCancelRide={handleCancelRide}
+               lang={lang}
+             />
+          </div>
+        </div>
+      </div>
+      <div className={`w-full lg:w-2/3 lg:h-full hidden lg:block`}>
+         <div className="h-full w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
+            <MapComponent drivers={drivers} rides={rides} isDarkMode={isDarkMode} lang={lang} />
+         </div>
+      </div>
+    </div>
+  );
+
+  const renderDrivers = () => (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{t.drivers}</h3>
+        <button onClick={() => openModal('ADD_DRIVER')} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
+          <Plus className="w-4 h-4" /> {t.add}
+        </button>
+      </div>
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+         {drivers.map(d => (
+           <div key={d.id} className="relative bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+              <img src={d.avatarUrl} className="w-12 h-12 rounded-full object-cover" />
+              <div className="flex-1">
+                <h4 className="font-bold text-slate-800 dark:text-white">{d.name}</h4>
+                <p className="text-xs text-slate-500">{d.phone} • {d.vehicleType}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${d.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : d.status === 'BUSY' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
+                    {t.status[d.status]}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                 <button onClick={() => handleToggleDriverStatus(d.id)} title={t.toggleStatus} className={`p-2 rounded-lg ${d.status === DriverStatus.OFFLINE ? 'bg-slate-200 text-slate-500 hover:bg-green-100 hover:text-green-600' : 'bg-green-100 text-green-600 hover:bg-slate-200 hover:text-slate-500'}`}>
+                    <Power className="w-4 h-4" />
+                 </button>
+                 <button onClick={() => handleDeleteDriver(d.id)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100">
+                    <Trash2 className="w-4 h-4" />
+                 </button>
+              </div>
+           </div>
+         ))}
+         {drivers.length === 0 && <div className="col-span-full text-center py-10 text-slate-400">{t.allDrivers} {t.unknown}</div>}
+      </div>
+    </div>
+  );
+
+  const renderCustomers = () => (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{t.customers}</h3>
+        <button onClick={() => openModal('ADD_CUSTOMER')} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
+          <Plus className="w-4 h-4" /> {t.add}
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-right" dir={isRTL ? 'rtl' : 'ltr'}>
+          <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500">
+            <tr>
+              <th className="p-4 font-bold">{t.name}</th>
+              <th className="p-4 font-bold">{t.phone}</th>
+              <th className="p-4 font-bold">{t.address}</th>
+              <th className="p-4 font-bold w-20">{t.action}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {customers.map(c => (
+              <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{c.name}</td>
+                <td className="p-4 text-slate-600 dark:text-slate-400">{c.phone}</td>
+                <td className="p-4 text-slate-600 dark:text-slate-400 truncate max-w-xs">{c.address}</td>
+                <td className="p-4 flex gap-2 justify-end">
+                   <button onClick={() => handleDeleteCustomer(c.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                </td>
+              </tr>
+            ))}
+            {customers.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-slate-400">{t.unknown}</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderStores = () => (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{t.stores}</h3>
+        <button onClick={() => openModal('ADD_STORE')} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
+          <Plus className="w-4 h-4" /> {t.add}
+        </button>
+      </div>
+       <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+         {stores.map(s => (
+           <div key={s.id} className="bg-slate-50 dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-300 transition-colors group relative">
+              <div className="flex justify-between items-start mb-2">
+                 <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600">
+                    <StoreIcon className="w-5 h-5" />
+                 </div>
+                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => openModal('EDIT_STORE', s)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit className="w-4 h-4" /></button>
+                    <button onClick={() => handleDeleteStore(s.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                 </div>
+              </div>
+              <h4 className="font-bold text-slate-800 dark:text-white text-lg mb-1">{s.name}</h4>
+              <p className="text-xs text-slate-500 mb-2">{t.owner}: {s.owner}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1 mb-1"><Users className="w-3 h-3" /> {s.phone}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1"><Car className="w-3 h-3 inline" /> {s.address}</p>
+              <button onClick={() => openModal('ADD_ORDER', { storeId: s.id, pickupAddress: s.address })} className="mt-4 w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                 {t.manualOrder}
+              </button>
+           </div>
+         ))}
+         {stores.length === 0 && <div className="col-span-full text-center py-10 text-slate-400">{t.unknown}</div>}
+      </div>
+    </div>
+  );
+
+  const renderOrders = () => (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden h-full flex flex-col">
+       <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
+          <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">{t.orders}</h3>
+          <button onClick={() => openModal('ADD_ORDER')} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
+            <Plus className="w-4 h-4" /> {t.add}
+          </button>
+       </div>
+       <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+          <RideList 
+            rides={rides}
+            drivers={drivers}
+            onAssignDriver={handleAssignDriver}
+            onCancelRide={handleCancelRide}
+            lang={lang}
+          />
+       </div>
+    </div>
+  );
+
+  // Authentication Check
   if (!isAuthenticated) {
     return (
       <>
-        {/* Minimal Settings for Auth Screen */}
         <div className={`fixed top-4 z-50 flex gap-2 ${isRTL ? 'left-4' : 'right-4'}`}>
-             <button 
-                onClick={() => setLang(prev => prev === 'fa' ? 'en' : 'fa')}
-                className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 transition-all text-[10px] font-bold"
-              >
-                {lang === 'fa' ? 'EN' : 'FA'}
-              </button>
-               <button 
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 transition-all"
-              >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
+             <button onClick={() => setLang(prev => prev === 'fa' ? 'en' : 'fa')} className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 transition-all text-[10px] font-bold">{lang === 'fa' ? 'EN' : 'FA'}</button>
+             <button onClick={() => setIsDarkMode(!isDarkMode)} className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 transition-all">{isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
         </div>
         <Auth onLogin={handleLogin} lang={lang} />
       </>
     );
   }
 
+  // Common Input Class
+  const inputClass = "w-full py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-white";
+  const labelClass = "block text-xs font-bold text-slate-500 mb-1.5";
+
   return (
     <div className={`flex h-screen bg-[#f8fafc] dark:bg-[#0b1120] font-sans transition-colors duration-300`}>
       
-      {/* Sidebar - Minimal */}
+      {/* Sidebar */}
       <aside className="w-20 lg:w-64 bg-white dark:bg-slate-900 border-r border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between hidden md:flex z-10 shadow-sm">
         <div>
           <div className="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-slate-100 dark:border-slate-800">
@@ -135,20 +421,22 @@ function App() {
           </div>
           
           <nav className="p-3 space-y-1">
-            <button 
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group ${activeTab === 'dashboard' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-            >
-              <LayoutDashboard className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-              <span className="font-medium text-sm hidden lg:block">{t.dashboard}</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('drivers')}
-              className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group ${activeTab === 'drivers' ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-            >
-              <Users className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-              <span className="font-medium text-sm hidden lg:block">{t.drivers}</span>
-            </button>
+            {[
+              { id: 'dashboard', icon: LayoutDashboard, label: t.dashboard },
+              { id: 'orders', icon: Package, label: t.orders },
+              { id: 'drivers', icon: Car, label: t.drivers },
+              { id: 'customers', icon: Users, label: t.customers },
+              { id: 'stores', icon: StoreIcon, label: t.stores },
+            ].map(item => (
+              <button 
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group ${activeTab === item.id ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+              >
+                <item.icon className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                <span className="font-medium text-sm hidden lg:block">{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
 
@@ -157,125 +445,120 @@ function App() {
             <LogOut className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
             <span className="font-medium text-sm hidden lg:block">{t.logout}</span>
           </button>
-          <button className="w-full flex items-center p-3 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <Settings className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-            <span className="font-medium text-sm hidden lg:block">{t.settings}</span>
-          </button>
         </div>
       </aside>
 
-      {/* Mobile Nav */}
-       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around p-3 z-50">
-          <button onClick={() => setActiveTab('dashboard')} className={`p-3 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800' : 'text-slate-400'}`}>
-            <LayoutDashboard className="w-6 h-6" />
-          </button>
-          <button onClick={() => setActiveTab('drivers')} className={`p-3 rounded-xl transition-colors ${activeTab === 'drivers' ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800' : 'text-slate-400'}`}>
-            <Users className="w-6 h-6" />
-          </button>
-       </div>
-
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
-        {/* Header - Light & Clean */}
+        {/* Header */}
         <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10">
           <div className="flex items-center gap-4">
-             {/* Small Settings - Moved Here */}
              <div className={`flex items-center gap-1.5 ${isRTL ? 'border-l pl-4' : 'border-r pr-4'} border-slate-200 dark:border-slate-800`}>
-                <button 
-                  onClick={() => setLang(prev => prev === 'fa' ? 'en' : 'fa')}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-[10px] font-bold"
-                >
-                  {lang === 'fa' ? 'EN' : 'FA'}
-                </button>
-                <button 
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </button>
+                <button onClick={() => setLang(prev => prev === 'fa' ? 'en' : 'fa')} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-[10px] font-bold">{lang === 'fa' ? 'EN' : 'FA'}</button>
+                <button onClick={() => setIsDarkMode(!isDarkMode)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">{isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
              </div>
-             
              <h1 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">
-               {activeTab === 'dashboard' ? t.dashboard : t.drivers}
+               {activeTab === 'dashboard' ? t.dashboard : activeTab === 'drivers' ? t.drivers : activeTab === 'customers' ? t.customers : activeTab === 'stores' ? t.stores : t.orders}
              </h1>
           </div>
-          
           <div className={`flex items-center gap-3 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
-             <div className="relative hidden sm:block group">
-               <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} />
-               <input 
-                 type="text" 
-                 placeholder={t.search} 
-                 className={`w-64 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm border-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700 transition-all ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`}
-               />
-             </div>
-             <button className="relative p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-               <Bell className="w-5 h-5" />
-               <span className="absolute top-1.5 left-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-             </button>
-             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                 <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">
-                  {userRole === 'ADMIN' ? 'AD' : userRole === 'DRIVER' ? 'DR' : 'ST'}
-                 </span>
+             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300">
+               {userRole === 'ADMIN' ? 'AD' : 'US'}
              </div>
           </div>
         </header>
 
-        {/* Content */}
+        {/* Content Area */}
         <div className="flex-1 overflow-auto p-4 lg:p-6 pb-20 md:pb-6 z-10 relative">
-          
-          {/* Top Stats */}
-          {activeTab === 'dashboard' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatCard title={t.activeRides} value={activeRidesCount} icon={Car} color="bg-blue-500" />
-              <StatCard title={t.availDrivers} value={availableDriversCount} icon={Users} color="bg-green-500" />
-              <StatCard title={t.todayRides} value={completedRidesCount} icon={Settings} color="bg-indigo-500" />
-              <StatCard title={t.revenue} value={`${totalRevenue}`} icon={LayoutDashboard} color="bg-amber-500" />
-            </div>
-          )}
-
-          <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-230px)]">
-            
-            {/* Left Panel: Lists & Input */}
-            <div className={`w-full lg:w-1/3 flex flex-col lg:h-full`}>
-              {activeTab === 'dashboard' && <AIChatInput onRideCreate={handleCreateRide} lang={lang} />}
-              
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex-1 flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
-                   <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">
-                     {activeTab === 'drivers' ? t.allDrivers : t.pendingRides}
-                   </h3>
-                   <span className="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded-md text-slate-500 border border-slate-200 dark:border-slate-700 font-bold">
-                     {activeTab === 'drivers' ? drivers.length : rides.filter(r => r.status === RideStatus.PENDING).length}
-                   </span>
-                </div>
-                <div className="p-2 flex-1 overflow-y-auto custom-scrollbar">
-                   {activeTab === 'drivers' ? (
-                     <DriverList drivers={drivers} lang={lang} />
-                   ) : (
-                     <RideList 
-                       rides={rides.filter(r => r.status === RideStatus.PENDING || r.status === RideStatus.IN_PROGRESS)} 
-                       drivers={drivers}
-                       onAssignDriver={handleAssignDriver}
-                       onCancelRide={handleCancelRide}
-                       lang={lang}
-                     />
-                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Panel: Map */}
-            <div className={`w-full lg:w-2/3 lg:h-full hidden lg:block`}>
-               <div className="h-full w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <MapComponent drivers={drivers} rides={rides} isDarkMode={isDarkMode} lang={lang} />
-               </div>
-            </div>
-
-          </div>
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'drivers' && renderDrivers()}
+          {activeTab === 'customers' && renderCustomers()}
+          {activeTab === 'stores' && renderStores()}
+          {activeTab === 'orders' && renderOrders()}
         </div>
       </main>
+
+      {/* Modals */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title={
+         modalType === 'ADD_DRIVER' ? t.driverReg :
+         modalType === 'ADD_CUSTOMER' ? t.register :
+         modalType === 'ADD_STORE' ? t.storeReg :
+         modalType === 'EDIT_STORE' ? t.edit :
+         t.manualOrder
+      } lang={lang}>
+         
+         {modalType === 'ADD_DRIVER' && (
+           <form onSubmit={handleAddDriver} className="space-y-4">
+              <div><label className={labelClass}>{t.name}</label><input required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} /></div>
+              <div><label className={labelClass}>{t.phone}</label><input required value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className={inputClass} dir="ltr" /></div>
+              <div>
+                <label className={labelClass}>{t.vehicleType}</label>
+                <select value={formData.vehicleType || 'Motor'} onChange={e => setFormData({...formData, vehicleType: e.target.value})} className={inputClass}>
+                  <option value="Motor">{t.vehicle.motor}</option>
+                  <option value="Car">{t.vehicle.car}</option>
+                  <option value="Van">{t.vehicle.van}</option>
+                </select>
+              </div>
+              <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold mt-4">{t.save}</button>
+           </form>
+         )}
+
+         {modalType === 'ADD_CUSTOMER' && (
+           <form onSubmit={handleAddCustomer} className="space-y-4">
+              <div><label className={labelClass}>{t.name}</label><input required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} /></div>
+              <div><label className={labelClass}>{t.phone}</label><input required value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className={inputClass} dir="ltr" /></div>
+              <div><label className={labelClass}>{t.address}</label><textarea required value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className={inputClass} rows={2} /></div>
+              <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold mt-4">{t.save}</button>
+           </form>
+         )}
+
+         {(modalType === 'ADD_STORE' || modalType === 'EDIT_STORE') && (
+            <form onSubmit={modalType === 'ADD_STORE' ? handleAddStore : handleEditStore} className="space-y-4">
+               <div><label className={labelClass}>{t.storeName}</label><input required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass} /></div>
+               <div><label className={labelClass}>{t.owner}</label><input required value={formData.owner || ''} onChange={e => setFormData({...formData, owner: e.target.value})} className={inputClass} /></div>
+               <div><label className={labelClass}>{t.phone}</label><input required value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className={inputClass} dir="ltr" /></div>
+               <div><label className={labelClass}>{t.address}</label><textarea required value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className={inputClass} rows={2} /></div>
+               <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold mt-4">{t.save}</button>
+            </form>
+         )}
+
+         {modalType === 'ADD_ORDER' && (
+            <form onSubmit={handleCreateOrder} className="space-y-3">
+               <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClass}>{t.selectCustomer}</label>
+                    <select value={formData.customerId || ''} onChange={e => setFormData({...formData, customerId: e.target.value, storeId: undefined})} className={inputClass} disabled={!!formData.storeId}>
+                      <option value="">--</option>
+                      {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>{t.selectStore}</label>
+                    <select value={formData.storeId || ''} onChange={e => setFormData({...formData, storeId: e.target.value, customerId: undefined})} className={inputClass} disabled={!!formData.customerId}>
+                      <option value="">--</option>
+                      {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+               </div>
+               <div><label className={labelClass}>{t.pickup}</label><input value={formData.pickupAddress || ''} onChange={e => setFormData({...formData, pickupAddress: e.target.value})} className={inputClass} /></div>
+               <div><label className={labelClass}>{t.dropoff}</label><input value={formData.dropoffAddress || ''} onChange={e => setFormData({...formData, dropoffAddress: e.target.value})} className={inputClass} /></div>
+               <div className="grid grid-cols-2 gap-3">
+                  <div><label className={labelClass}>{t.price}</label><input type="number" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className={inputClass} /></div>
+                  <div>
+                    <label className={labelClass}>{t.priority.NORMAL}</label>
+                    <select value={formData.priority || 'NORMAL'} onChange={e => setFormData({...formData, priority: e.target.value})} className={inputClass}>
+                      <option value="NORMAL">{t.priority.NORMAL}</option>
+                      <option value="HIGH">{t.priority.HIGH}</option>
+                      <option value="URGENT">{t.priority.URGENT}</option>
+                    </select>
+                  </div>
+               </div>
+               <div><label className={labelClass}>Note</label><input value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} className={inputClass} /></div>
+               <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold mt-4">{t.save}</button>
+            </form>
+         )}
+
+      </Modal>
     </div>
   );
 }

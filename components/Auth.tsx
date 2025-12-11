@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User, Truck, Store, Lock, ArrowLeft, Phone, MapPin, Eye, EyeOff, CheckSquare, Square } from 'lucide-react';
 import { translations } from '../utils/translations';
 
-const InputWrapper = ({ children }: { children: React.ReactNode }) => (
+const InputWrapper = ({ children }: { children?: React.ReactNode }) => (
   <div className="relative group transition-all duration-300">
      {children}
   </div>

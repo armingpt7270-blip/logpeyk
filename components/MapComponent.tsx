@@ -1,0 +1,123 @@
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { Driver, Ride, DriverStatus, RideStatus } from '../types';
+import { MAP_CENTER } from '../constants';
+import { translations } from '../utils/translations';
+
+// Fix Leaflet default icon issue
+const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
+const iconShadowUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: iconUrl,
+    shadowUrl: iconShadowUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Custom Icons
+const createCustomIcon = (color: string) => {
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+};
+
+const driverIconAvailable = createCustomIcon('#22c55e'); // Green
+const driverIconBusy = createCustomIcon('#f59e0b'); // Amber
+const driverIconOffline = createCustomIcon('#94a3b8'); // Gray
+const ridePickupIcon = createCustomIcon('#6366f1'); // Indigo
+const rideDropoffIcon = createCustomIcon('#ec4899'); // Pink
+
+interface MapComponentProps {
+  drivers: Driver[];
+  rides: Ride[];
+  isDarkMode?: boolean;
+  lang?: 'fa' | 'en';
+}
+
+const MapUpdater: React.FC<{ center: { lat: number, lng: number } }> = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 13);
+  }, [center, map]);
+  return null;
+}
+
+export const MapComponent: React.FC<MapComponentProps> = ({ drivers, rides, isDarkMode, lang = 'fa' }) => {
+  const t = translations[lang];
+  const activeRides = rides.filter(r => r.status !== RideStatus.COMPLETED && r.status !== RideStatus.CANCELLED);
+
+  // Tile Layer URLs
+  const lightTiles = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  const darkTiles = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+  return (
+    <div className="h-full w-full rounded-3xl overflow-hidden shadow-inner border border-slate-200 dark:border-slate-800 relative z-0">
+      <MapContainer center={MAP_CENTER} zoom={13} scrollWheelZoom={true} className="h-full w-full">
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={isDarkMode ? darkTiles : lightTiles}
+        />
+        
+        <MapUpdater center={MAP_CENTER} />
+
+        {/* Drivers */}
+        {drivers.map(driver => (
+          <Marker 
+            key={driver.id} 
+            position={[driver.location.lat, driver.location.lng]}
+            icon={
+              driver.status === DriverStatus.AVAILABLE ? driverIconAvailable :
+              driver.status === DriverStatus.BUSY ? driverIconBusy : driverIconOffline
+            }
+          >
+            <Popup className="custom-popup">
+              <div className={`p-1 font-sans ${lang === 'fa' ? 'text-right' : 'text-left'}`} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
+                <p className="font-bold text-sm text-slate-800">{driver.name}</p>
+                <p className="text-xs text-slate-500 mb-1">{driver.vehicleType} • ⭐ {driver.rating}</p>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block
+                  ${driver.status === DriverStatus.AVAILABLE ? 'bg-green-100 text-green-700' : 
+                    driver.status === DriverStatus.BUSY ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
+                  {t.status[driver.status]}
+                </span>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Active Rides */}
+        {activeRides.map(ride => (
+          <React.Fragment key={ride.id}>
+             {/* Pickup Marker */}
+            <Marker position={[ride.pickup.lat, ride.pickup.lng]} icon={ridePickupIcon}>
+               <Popup>
+                <div className={`p-1 font-sans ${lang === 'fa' ? 'text-right' : 'text-left'}`} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
+                  <p className="font-bold text-xs text-indigo-600 mb-1">{t.pickup}</p>
+                  <p className="font-medium text-sm text-slate-800">{ride.customerName}</p>
+                  <p className="text-xs text-slate-500">{ride.pickup.address}</p>
+                </div>
+              </Popup>
+            </Marker>
+            
+            {/* Dropoff Marker */}
+            <Marker position={[ride.dropoff.lat, ride.dropoff.lng]} icon={rideDropoffIcon}>
+               <Popup>
+                <div className={`p-1 font-sans ${lang === 'fa' ? 'text-right' : 'text-left'}`} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
+                  <p className="font-bold text-xs text-pink-600 mb-1">{t.dropoff}</p>
+                  <p className="font-medium text-sm text-slate-800">{ride.customerName}</p>
+                  <p className="text-xs text-slate-500">{ride.dropoff.address}</p>
+                </div>
+              </Popup>
+            </Marker>
+          </React.Fragment>
+        ))}
+      </MapContainer>
+    </div>
+  );
+};

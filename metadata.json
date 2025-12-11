@@ -1,0 +1,7 @@
+{
+  "name": "Rider Dispatcher AI",
+  "description": "A comprehensive logistics dashboard for dispatching rides and managing drivers, featuring AI-powered natural language processing for ride creation and smart driver assignment.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -262,25 +262,23 @@ function App() {
              <StatCard title={t.revenue} value={`${(rides.filter(r => r.status === RideStatus.COMPLETED).reduce((acc, curr) => acc + curr.price, 0) / 1000000).toFixed(1)}M`} icon={DollarSign} color="bg-pink-500" trend="+12%" />
         </div>
 
-        {/* Main Content Split */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden min-h-0 animate-in fade-in duration-700 delay-100">
-              {/* Left Column: Map & AI - Takes 2 cols */}
-              <div className="lg:col-span-2 flex flex-col gap-6 overflow-hidden h-full">
-                  {/* AI Input */}
-                  <div className="shrink-0 relative z-20">
-                    <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
-                  </div>
-                  
-                  {/* Map */}
-                  <div className="flex-1 glass-panel rounded-3xl overflow-hidden relative border-0 shadow-xl z-0">
-                     <MapComponent drivers={drivers} rides={rides} isDarkMode={isDarkMode} lang={lang} />
-                  </div>
-              </div>
+        {/* AI Input Section */}
+        <div className="shrink-0 relative z-20 animate-in slide-in-from-top-3 duration-500 delay-100">
+             <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
+        </div>
 
-              {/* Right Column: Ride List - Takes 1 col */}
-              <div className="glass-panel rounded-3xl flex flex-col overflow-hidden border-0 shadow-xl lg:h-full h-[400px]">
+        {/* Main Content Split: Rides List & Drivers List (No Map) */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden min-h-0 animate-in fade-in duration-700 delay-200">
+              
+              {/* Left Column: Active Rides */}
+              <div className="glass-panel rounded-3xl flex flex-col overflow-hidden border-0 shadow-xl">
                   <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
-                     <h3 className="font-bold text-lg text-slate-800 dark:text-white">{t.activeRides}</h3>
+                     <div className="flex items-center gap-3">
+                        <div className="bg-indigo-500/10 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
+                           <Activity className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">{t.activeRides}</h3>
+                     </div>
                      <button onClick={() => openModal('ADD_ORDER')} className="p-2 bg-indigo-600 rounded-xl text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/30">
                         <Plus className="w-5 h-5" />
                      </button>
@@ -293,6 +291,33 @@ function App() {
                        onCancelRide={handleCancelRide}
                        lang={lang}
                      />
+                  </div>
+              </div>
+
+              {/* Right Column: Available Drivers (Replacing Map) */}
+              <div className="glass-panel rounded-3xl flex flex-col overflow-hidden border-0 shadow-xl">
+                  <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
+                     <div className="flex items-center gap-3">
+                        <div className="bg-green-500/10 p-2 rounded-xl text-green-600 dark:text-green-400">
+                           <Car className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">{t.availDrivers}</h3>
+                     </div>
+                     <button onClick={() => setActiveTab('drivers')} className="text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors">
+                        {t.allDrivers} <ChevronRight className="w-3 h-3 inline-block" />
+                     </button>
+                  </div>
+                  <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+                     <DriverList 
+                        drivers={drivers.filter(d => d.status === DriverStatus.AVAILABLE)} 
+                        lang={lang} 
+                     />
+                     {drivers.filter(d => d.status === DriverStatus.AVAILABLE).length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60">
+                            <Car className="w-12 h-12 mb-2 opacity-50" />
+                            <p className="text-sm font-bold">No available drivers</p>
+                        </div>
+                     )}
                   </div>
               </div>
         </div>

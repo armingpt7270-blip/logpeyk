@@ -21,7 +21,9 @@ import {
   MapPin,
   PlusCircle,
   Menu,
-  ChevronRight
+  ChevronRight,
+  DollarSign,
+  Activity
 } from 'lucide-react';
 
 import { Ride, Driver, RideStatus, DriverStatus, Customer, Store } from './types';
@@ -34,6 +36,7 @@ import { Auth } from './components/Auth';
 import { Modal } from './components/Modal';
 import { OrderMapPicker } from './components/OrderMapPicker';
 import { LocationMapPicker } from './components/LocationMapPicker';
+import { MapComponent } from './components/MapComponent';
 import { translations } from './utils/translations';
 
 function App() {
@@ -105,7 +108,7 @@ function App() {
     db.clearCredentials();
   };
 
-  // --- Handlers (Keep logic same, update UI later) ---
+  // --- Handlers ---
   const handleAddDriver = (e: React.FormEvent) => {
     e.preventDefault();
     const newDriver: Driver = {
@@ -250,35 +253,48 @@ function App() {
   // --- Views ---
 
   const renderDashboard = () => (
-    <div className="flex flex-col h-full space-y-6">
-        <div className="w-full mx-auto animate-in slide-in-from-bottom-5 duration-500">
-             <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
+    <div className="flex flex-col h-full space-y-6 overflow-hidden">
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-in slide-in-from-top-5 duration-500 shrink-0">
+             <StatCard title={t.todayRides} value={rides.filter(r => new Date(r.requestedAt).toDateString() === new Date().toDateString()).length} icon={Car} color="bg-indigo-500" />
+             <StatCard title={t.availDrivers} value={drivers.filter(d => d.status === DriverStatus.AVAILABLE).length} icon={Users} color="bg-green-500" />
+             <StatCard title={t.activeRides} value={rides.filter(r => r.status === RideStatus.IN_PROGRESS).length} icon={Activity} color="bg-amber-500" />
+             <StatCard title={t.revenue} value={`${(rides.filter(r => r.status === RideStatus.COMPLETED).reduce((acc, curr) => acc + curr.price, 0) / 1000000).toFixed(1)}M`} icon={DollarSign} color="bg-pink-500" trend="+12%" />
         </div>
 
-        <div className="glass-panel rounded-3xl flex-1 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-700 delay-100 border-0">
-          <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
-             <div className="flex items-center gap-4">
-                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-500/30">
-                     <Package className="w-5 h-5" />
-                 </div>
-                 <div>
-                    <h3 className="font-bold text-xl text-slate-800 dark:text-white tracking-tight">{t.activeRides}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t.pendingRides}: {rides.filter(r => r.status === RideStatus.PENDING).length}</p>
-                 </div>
-             </div>
-             <button onClick={() => openModal('ADD_ORDER')} className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-2xl text-sm font-bold hover:scale-105 transition-all shadow-lg">
-                <Plus className="w-4 h-4" /> {t.add}
-             </button>
-          </div>
-          <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-             <RideList 
-               rides={rides.filter(r => r.status === RideStatus.PENDING || r.status === RideStatus.IN_PROGRESS || r.status === RideStatus.ASSIGNED)} 
-               drivers={drivers}
-               onAssignDriver={handleAssignDriver}
-               onCancelRide={handleCancelRide}
-               lang={lang}
-             />
-          </div>
+        {/* Main Content Split */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden min-h-0 animate-in fade-in duration-700 delay-100">
+              {/* Left Column: Map & AI - Takes 2 cols */}
+              <div className="lg:col-span-2 flex flex-col gap-6 overflow-hidden h-full">
+                  {/* AI Input */}
+                  <div className="shrink-0 relative z-20">
+                    <AIChatInput onRideCreate={handleAICreateRide} lang={lang} />
+                  </div>
+                  
+                  {/* Map */}
+                  <div className="flex-1 glass-panel rounded-3xl overflow-hidden relative border-0 shadow-xl z-0">
+                     <MapComponent drivers={drivers} rides={rides} isDarkMode={isDarkMode} lang={lang} />
+                  </div>
+              </div>
+
+              {/* Right Column: Ride List - Takes 1 col */}
+              <div className="glass-panel rounded-3xl flex flex-col overflow-hidden border-0 shadow-xl lg:h-full h-[400px]">
+                  <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
+                     <h3 className="font-bold text-lg text-slate-800 dark:text-white">{t.activeRides}</h3>
+                     <button onClick={() => openModal('ADD_ORDER')} className="p-2 bg-indigo-600 rounded-xl text-white hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/30">
+                        <Plus className="w-5 h-5" />
+                     </button>
+                  </div>
+                  <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+                     <RideList 
+                       rides={rides.filter(r => r.status === RideStatus.PENDING || r.status === RideStatus.IN_PROGRESS || r.status === RideStatus.ASSIGNED)} 
+                       drivers={drivers}
+                       onAssignDriver={handleAssignDriver}
+                       onCancelRide={handleCancelRide}
+                       lang={lang}
+                     />
+                  </div>
+              </div>
         </div>
     </div>
   );

@@ -48,57 +48,57 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
   const isRTL = lang === 'fa';
 
   const renderLogin = () => (
-    <form onSubmit={handleLoginSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form onSubmit={handleLoginSubmit} className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
-        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">{t.username}</label>
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">{t.username}</label>
         <InputWrapper>
-          <User className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
+          <User className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
           <input 
             type="text" 
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}
-            placeholder="User / Phone" 
+            className={`w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`}
+            placeholder="" 
           />
         </InputWrapper>
       </div>
       <div>
-        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">{t.password}</label>
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">{t.password}</label>
         <InputWrapper>
-          <Lock className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
+          <Lock className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
           <input 
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
-            placeholder="••••••••" 
+            className={`w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-11 pl-11' : 'pl-11 pr-11'}`}
+            placeholder="" 
           />
           <button 
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary-600 transition-colors ${isRTL ? 'left-4' : 'right-4'}`}
+            className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors ${isRTL ? 'left-4' : 'right-4'}`}
           >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </InputWrapper>
       </div>
 
-      <div className="flex items-center cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
-        <div className={`transition-colors ${rememberMe ? 'text-primary-600' : 'text-slate-400'}`}>
-          {rememberMe ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+      <div className="flex items-center cursor-pointer pt-1" onClick={() => setRememberMe(!rememberMe)}>
+        <div className={`transition-colors ${rememberMe ? 'text-indigo-600' : 'text-slate-300'}`}>
+          {rememberMe ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
         </div>
-        <span className="mx-2 text-sm text-slate-600 dark:text-slate-400 select-none">{t.rememberMe}</span>
+        <span className="mx-2 text-xs text-slate-500 dark:text-slate-400 select-none">{t.rememberMe}</span>
       </div>
       
-      {error && <p className="text-red-500 text-xs font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-xl border border-red-100 dark:border-red-900/30">{error}</p>}
+      {error && <p className="text-red-500 text-xs font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">{error}</p>}
 
-      <button type="submit" className="w-full bg-gradient-to-r from-primary-600 to-indigo-700 hover:from-primary-700 hover:to-indigo-800 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary-500/30 hover:shadow-primary-500/40 transform hover:-translate-y-0.5 transition-all duration-200">
+      <button type="submit" className="w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 py-3 rounded-xl font-bold shadow-sm transform transition-all duration-200 mt-2">
         {t.login}
       </button>
 
-      <div className="mt-8 text-center pt-6 border-t border-slate-100 dark:border-slate-800">
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{t.noAccount}</p>
-        <button type="button" onClick={() => setView('REGISTER_SELECTION')} className="text-sm font-bold text-primary-600 hover:text-primary-500 transition-colors">
+      <div className="mt-6 text-center pt-4 border-t border-slate-100 dark:border-slate-800">
+        <p className="text-xs text-slate-400 mb-2">{t.noAccount}</p>
+        <button type="button" onClick={() => setView('REGISTER_SELECTION')} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
           {t.register}
         </button>
       </div>
@@ -106,123 +106,93 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
   );
 
   const renderRegisterSelection = () => (
-    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-      <div className="flex items-center mb-6 text-slate-500 hover:text-primary-600 transition-colors cursor-pointer" onClick={() => setView('LOGIN')}>
-        <ArrowLeft className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2 rotate-180'}`} />
-        <span className="text-sm font-bold">{t.backToLogin}</span>
+    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
+      <div className="flex items-center mb-4 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => setView('LOGIN')}>
+        <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2 rotate-180'}`} />
+        <span className="text-xs font-bold">{t.backToLogin}</span>
       </div>
       
-      <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 text-center">{t.registerTitle}</h3>
+      <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 text-center">{t.registerTitle}</h3>
 
-      <button onClick={() => setView('REGISTER_DRIVER')} className="w-full flex items-center p-5 border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-3xl hover:border-primary-500 dark:hover:border-primary-500 hover:bg-white dark:hover:bg-slate-800 transition-all group text-right shadow-sm hover:shadow-md">
-          <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300 ml-4">
-              <Truck className="w-7 h-7" />
+      <button onClick={() => setView('REGISTER_DRIVER')} className="w-full flex items-center p-4 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-right shadow-sm hover:shadow-md">
+          <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors ml-4">
+              <Truck className="w-6 h-6" />
           </div>
           <div className="flex-1">
-              <span className="block font-bold text-slate-800 dark:text-slate-200 text-base mb-1">{t.driverReg}</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{t.driverDesc}</span>
+              <span className="block font-bold text-slate-800 dark:text-slate-200 text-sm mb-0.5">{t.driverReg}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">{t.driverDesc}</span>
           </div>
       </button>
 
-      <button onClick={() => setView('REGISTER_STORE')} className="w-full flex items-center p-5 border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-3xl hover:border-amber-500 dark:hover:border-amber-500 hover:bg-white dark:hover:bg-slate-800 transition-all group text-right shadow-sm hover:shadow-md">
-          <div className="bg-amber-100 dark:bg-amber-900/30 p-4 rounded-2xl text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300 ml-4">
-              <Store className="w-7 h-7" />
+      <button onClick={() => setView('REGISTER_STORE')} className="w-full flex items-center p-4 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-2xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-right shadow-sm hover:shadow-md">
+          <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-slate-600 dark:text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors ml-4">
+              <Store className="w-6 h-6" />
           </div>
           <div className="flex-1">
-              <span className="block font-bold text-slate-800 dark:text-slate-200 text-base mb-1">{t.storeReg}</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{t.storeDesc}</span>
+              <span className="block font-bold text-slate-800 dark:text-slate-200 text-sm mb-0.5">{t.storeReg}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">{t.storeDesc}</span>
           </div>
       </button>
     </div>
   );
 
   const renderRegistrationForm = (isDriver: boolean) => (
-    <div className="space-y-5 animate-in slide-in-from-right-8 duration-500">
-      <div className="flex items-center mb-4 text-slate-500 hover:text-primary-600 transition-colors cursor-pointer" onClick={() => setView('REGISTER_SELECTION')}>
-        <ArrowLeft className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2 rotate-180'}`} />
-        <span className="text-sm font-bold">{t.backToLogin}</span>
+    <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+      <div className="flex items-center mb-4 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => setView('REGISTER_SELECTION')}>
+        <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2 rotate-180'}`} />
+        <span className="text-xs font-bold">{t.backToLogin}</span>
       </div>
       
-      <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">
+      <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
         {isDriver ? t.driverReg : t.storeReg}
       </h3>
 
       <div>
-        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">
           {isDriver ? t.fullName : t.storeName}
         </label>
         <InputWrapper>
-          <User className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
-          <input type="text" className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`} />
+          <User className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
+          <input type="text" className={`w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`} />
         </InputWrapper>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">{t.mobile}</label>
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">{t.mobile}</label>
         <InputWrapper>
-          <Phone className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
-          <input type="tel" className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white text-right ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`} dir="ltr" placeholder="0912..." />
+          <Phone className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
+          <input type="tel" className={`w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm font-medium dark:text-white text-right ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`} dir="ltr" placeholder="0912..." />
         </InputWrapper>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">{t.password}</label>
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 px-1">{t.password}</label>
         <InputWrapper>
-          <Lock className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
-          <input type="password" className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`} />
+          <Lock className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
+          <input type="password" className={`w-full py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`} />
         </InputWrapper>
       </div>
 
-      {isDriver ? (
-        <div>
-          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">{t.vehicleType}</label>
-          <div className="relative group">
-            <Truck className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
-            <select className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white appearance-none ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}>
-              <option>Motorcycle</option>
-              <option>Sedan (Pride/Tiba)</option>
-              <option>Sedan (Peugeot/Samand)</option>
-              <option>Pickup Truck</option>
-            </select>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 px-1">{t.address}</label>
-          <InputWrapper>
-            <MapPin className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
-            <input type="text" className={`w-full py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all text-sm font-medium dark:text-white ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`} />
-          </InputWrapper>
-        </div>
-      )}
-
-      <button onClick={() => { alert('Submitted'); setView('LOGIN'); }} className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-500/30 transition-all duration-200 mt-4">
+      <button onClick={() => { alert('Submitted'); setView('LOGIN'); }} className="w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 py-3 rounded-xl font-bold shadow-sm transition-all duration-200 mt-2">
         {t.submitReg}
       </button>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 font-sans transition-colors duration-300" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="glass w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20 dark:border-slate-700/50 relative">
+    <div className="min-h-screen bg-[#f3f4f6] dark:bg-[#0f172a] flex items-center justify-center p-4 font-sans transition-colors duration-300" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
         
-        {/* Decorative elements */}
-        <div className="absolute top-[-50%] left-[-50%] w-full h-full bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="absolute bottom-[-50%] right-[-50%] w-full h-full bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-        {/* Header */}
-        <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-10 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md shadow-inner border border-white/30">
-                <Truck className="text-white w-9 h-9" />
-            </div>
-            <h1 className="text-2xl font-black text-white mb-2 tracking-tight">{t.appTitle}</h1>
-            <p className="text-indigo-100 text-sm font-medium opacity-90">{t.subtitle}</p>
+        {/* Header - Minimalist */}
+        <div className="p-8 pb-0 text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 mb-4">
+              <Truck className="w-6 h-6" />
           </div>
+          <h1 className="text-xl font-black text-slate-800 dark:text-white mb-1 tracking-tight">{t.appTitle}</h1>
+          <p className="text-slate-400 text-xs font-medium">{t.subtitle}</p>
         </div>
 
-        <div className="p-8 relative z-10">
+        <div className="p-8">
           {view === 'LOGIN' && renderLogin()}
           {view === 'REGISTER_SELECTION' && renderRegisterSelection()}
           {view === 'REGISTER_DRIVER' && renderRegistrationForm(true)}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowUp, Loader2 } from 'lucide-react';
 import { parseNaturalLanguageRide } from '../services/geminiService';
 import { Ride } from '../types';
 import { translations } from '../utils/translations';
@@ -43,40 +43,40 @@ export const AIChatInput: React.FC<AIChatInputProps> = ({ onRideCreate, lang }) 
       onRideCreate(newRideData);
       setInput('');
     } else {
-      alert(lang === 'fa' ? "متاسفانه متوجه درخواست نشدم. لطفا دوباره تلاش کنید." : "Could not understand request. Please try again.");
+      alert(lang === 'fa' ? "متاسفانه متوجه درخواست نشدم." : "Could not understand request.");
     }
     setIsProcessing(false);
   };
 
   return (
-    <div className="bg-gradient-to-br from-indigo-600 to-violet-700 dark:from-indigo-900 dark:to-slate-900 p-6 rounded-3xl shadow-xl shadow-indigo-500/20 mb-6 text-white relative overflow-hidden group">
-      {/* Animated background sheen */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-[50px] -mr-16 -mt-16 pointer-events-none group-hover:opacity-10 transition-opacity"></div>
+    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-6 relative group hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
       
-      <div className="flex items-center mb-4 relative z-10">
-        <Sparkles className={`w-5 h-5 text-yellow-300 animate-pulse ${isRTL ? 'ml-2' : 'mr-2'}`} />
-        <h3 className="font-bold text-sm tracking-wide">{t.aiAssistant}</h3>
+      <div className="flex items-center mb-3">
+        <div className="bg-indigo-50 dark:bg-indigo-900/30 p-1.5 rounded-lg">
+           <Sparkles className={`w-4 h-4 text-indigo-600 dark:text-indigo-400`} />
+        </div>
+        <h3 className={`font-bold text-sm text-slate-700 dark:text-slate-200 ${isRTL ? 'mr-2' : 'ml-2'}`}>{t.aiAssistant}</h3>
       </div>
       
-      <form onSubmit={handleSubmit} className="relative z-10">
+      <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
             <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={t.aiPlaceholder}
-            className={`w-full py-4 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-md transition-all shadow-inner ${isRTL ? 'pr-4 pl-12' : 'pl-4 pr-12'}`}
+            className={`w-full py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${isRTL ? 'pr-4 pl-12' : 'pl-4 pr-12'}`}
             />
             <button
             type="submit"
             disabled={!input.trim() || isProcessing}
-            className={`absolute top-1/2 -translate-y-1/2 p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 transition-all shadow-lg ${isRTL ? 'left-2' : 'right-2'}`}
+            className={`absolute top-1/2 -translate-y-1/2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm ${isRTL ? 'left-2' : 'right-2'}`}
             >
-            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowLeft className={`w-4 h-4 ${!isRTL && 'rotate-180'}`} />}
+            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
             </button>
         </div>
       </form>
-      <p className="text-[10px] text-indigo-200 mt-3 opacity-80 font-medium relative z-10">
+      <p className="text-[10px] text-slate-400 mt-2 font-medium">
         {t.aiHint}
       </p>
     </div>

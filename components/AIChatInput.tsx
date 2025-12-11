@@ -49,36 +49,33 @@ export const AIChatInput: React.FC<AIChatInputProps> = ({ onRideCreate, lang }) 
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-6 relative group hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
-      
-      <div className="flex items-center mb-3">
-        <div className="bg-indigo-50 dark:bg-indigo-900/30 p-1.5 rounded-lg">
-           <Sparkles className={`w-4 h-4 text-indigo-600 dark:text-indigo-400`} />
-        </div>
-        <h3 className={`font-bold text-sm text-slate-700 dark:text-slate-200 ${isRTL ? 'mr-2' : 'ml-2'}`}>{t.aiAssistant}</h3>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="relative">
-            <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={t.aiPlaceholder}
-            className={`w-full py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${isRTL ? 'pr-4 pl-12' : 'pl-4 pr-12'}`}
-            />
-            <button
-            type="submit"
-            disabled={!input.trim() || isProcessing}
-            className={`absolute top-1/2 -translate-y-1/2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm ${isRTL ? 'left-2' : 'right-2'}`}
-            >
-            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
-            </button>
-        </div>
-      </form>
-      <p className="text-[10px] text-slate-400 mt-2 font-medium">
-        {t.aiHint}
-      </p>
+    <div className="relative group">
+       <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl blur opacity-25 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+       <div className="relative glass-panel rounded-3xl p-2 pl-3 flex items-center border border-white/50 dark:border-white/10 shadow-xl">
+           <div className="bg-indigo-500 text-white p-2.5 rounded-2xl mr-2 ml-1 animate-pulse">
+               <Sparkles className="w-5 h-5" />
+           </div>
+           
+           <form onSubmit={handleSubmit} className="flex-1 flex items-center">
+             <input
+               type="text"
+               value={input}
+               onChange={(e) => setInput(e.target.value)}
+               placeholder={t.aiPlaceholder}
+               className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder-slate-400 font-medium px-3 text-sm h-12"
+             />
+             <button
+               type="submit"
+               disabled={!input.trim() || isProcessing}
+               className={`p-3 rounded-2xl transition-all duration-300 shadow-md flex items-center justify-center
+                 ${!input.trim() 
+                   ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed' 
+                   : 'bg-gradient-to-tr from-indigo-600 to-purple-600 text-white hover:scale-105 shadow-indigo-500/40'}`}
+             >
+               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowUp className="w-5 h-5" />}
+             </button>
+           </form>
+       </div>
     </div>
   );
 };

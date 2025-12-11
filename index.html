@@ -24,14 +24,34 @@
               sans: ['Vazirmatn', 'sans-serif'],
             },
             colors: {
-              primary: {
-                50: '#eef2ff',
-                100: '#e0e7ff',
-                500: '#6366f1',
-                600: '#4f46e5',
-                700: '#4338ca',
-                900: '#312e81',
+              glass: {
+                100: 'rgba(255, 255, 255, 0.1)',
+                200: 'rgba(255, 255, 255, 0.2)',
+                300: 'rgba(255, 255, 255, 0.3)',
+                dark: 'rgba(15, 23, 42, 0.6)',
               }
+            },
+            animation: {
+              'blob': 'blob 7s infinite',
+              'gradient-x': 'gradient-x 15s ease infinite',
+            },
+            keyframes: {
+              blob: {
+                '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                '100%': { transform: 'translate(0px, 0px) scale(1)' },
+              },
+              'gradient-x': {
+                '0%, 100%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'left center'
+                },
+                '50%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'right center'
+                },
+              },
             }
           }
         }
@@ -42,8 +62,9 @@
     <style>
       body {
         font-family: 'Vazirmatn', sans-serif;
+        background-color: #0f172a;
       }
-      /* Custom scrollbar for webkit */
+      /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -52,29 +73,68 @@
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-      }
-      .dark ::-webkit-scrollbar-thumb {
-        background: #475569;
+        background: rgba(148, 163, 184, 0.5);
+        border-radius: 10px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+        background: rgba(148, 163, 184, 0.8);
       }
+      
       .leaflet-container {
         width: 100%;
         height: 100%;
         z-index: 0;
+        border-radius: 1rem;
       }
       
-      /* Glassmorphism utilities */
-      .glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+      /* Advanced Glassmorphism */
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
       }
-      .dark .glass {
-        background: rgba(30, 41, 59, 0.7);
+      
+      .dark .glass-panel {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .dark .glass-card {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .glass-card:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      
+      .dark .glass-card:hover {
+        background: rgba(30, 41, 59, 0.6);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Animated Background */
+      .animated-bg {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient-x 15s ease infinite;
+      }
+      
+      .dark .animated-bg {
+        background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
       }
     </style>
   <script type="importmap">
@@ -96,7 +156,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+  <body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

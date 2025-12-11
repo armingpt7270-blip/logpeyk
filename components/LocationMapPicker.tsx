@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { MAP_CENTER } from '../constants';
 
@@ -28,12 +28,26 @@ const MapEvents = ({ onLocationSelect }: { onLocationSelect: (lat: number, lng: 
   return null;
 };
 
+// Auto locate on mount
+const AutoLocate: React.FC = () => {
+    const map = useMap();
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const { latitude, longitude } = position.coords;
+                map.flyTo([latitude, longitude], 14);
+            });
+        }
+    }, [map]);
+    return null;
+};
+
 export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({ location, onLocationSelect, lang }) => {
   return (
     <div className="h-48 w-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 relative z-0 mt-2">
       <MapContainer center={MAP_CENTER} zoom={12} className="h-full w-full">
         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-        
+        <AutoLocate />
         <MapEvents onLocationSelect={onLocationSelect} />
 
         {location && (

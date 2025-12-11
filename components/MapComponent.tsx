@@ -45,13 +45,25 @@ interface MapComponentProps {
   lang?: 'fa' | 'en';
 }
 
-const MapUpdater: React.FC<{ center: { lat: number, lng: number } }> = ({ center }) => {
+const AutoLocate: React.FC = () => {
   const map = useMap();
+  
   useEffect(() => {
-    map.setView(center, 13);
-  }, [center, map]);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.flyTo([latitude, longitude], 14, { animate: true });
+        },
+        (error) => {
+          console.warn("Auto-locate failed", error);
+        }
+      );
+    }
+  }, [map]);
+
   return null;
-}
+};
 
 const LocateControl: React.FC<{ lang: 'fa' | 'en' }> = ({ lang }) => {
   const map = useMap();
@@ -106,7 +118,7 @@ export const MapComponent: React.FC<MapComponentProps> = ({ drivers, rides, isDa
           url={isDarkMode ? darkTiles : lightTiles}
         />
         
-        <MapUpdater center={MAP_CENTER} />
+        <AutoLocate />
         <LocateControl lang={lang} />
 
         {/* Drivers */}

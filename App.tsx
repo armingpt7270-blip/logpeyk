@@ -4,26 +4,26 @@ import {
   Users, 
   Car, 
   Settings, 
-  Bell,
-  Search,
-  LogOut,
-  Moon,
-  Sun,
-  Store as StoreIcon,
-  Package,
-  Plus,
-  Trash2,
-  Edit,
-  MoreVertical,
-  CheckCircle,
-  XCircle,
-  Power,
-  MapPin,
-  PlusCircle,
-  Menu,
-  ChevronRight,
-  DollarSign,
-  Activity,
+  Bell, 
+  Search, 
+  LogOut, 
+  Moon, 
+  Sun, 
+  Store as StoreIcon, 
+  Package, 
+  Plus, 
+  Trash2, 
+  Edit, 
+  MoreVertical, 
+  CheckCircle, 
+  XCircle, 
+  Power, 
+  MapPin, 
+  PlusCircle, 
+  Menu, 
+  ChevronRight, 
+  DollarSign, 
+  Activity, 
   X
 } from 'lucide-react';
 
@@ -236,7 +236,9 @@ function App() {
     setSelectedItem(item);
     setFormData(item || {});
     setMapCoords({ pickup: null, dropoff: null });
-    setMapPickerMode(null);
+    // Default to 'pickup' mode when opening order modal
+    setMapPickerMode(type === 'ADD_ORDER' ? 'pickup' : null);
+    
     if (type === 'ADD_ORDER' && item?.customerId) {
         const c = customers.find(cust => cust.id === item.customerId);
         if (c && c.location) setMapCoords(prev => ({ ...prev, dropoff: c.location! }));
@@ -249,6 +251,14 @@ function App() {
     setModalType(null);
     setSelectedItem(null);
     setFormData({});
+  };
+
+  const handleSetLocation = (type: 'pickup' | 'dropoff', lat: number, lng: number) => {
+      setMapCoords(prev => ({ ...prev, [type]: { lat, lng } }));
+      // Automatically switch to dropoff after pickup is set
+      if (type === 'pickup') {
+          setMapPickerMode('dropoff');
+      }
   };
 
   // --- Views ---
@@ -716,7 +726,7 @@ function App() {
                  dropoff={mapCoords.dropoff}
                  mode={mapPickerMode}
                  lang={lang}
-                 onSetLocation={(type, lat, lng) => setMapCoords(prev => ({ ...prev, [type]: { lat, lng } }))}
+                 onSetLocation={handleSetLocation}
                />
 
                <div className="grid grid-cols-2 gap-4 mt-2">

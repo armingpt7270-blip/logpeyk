@@ -14,7 +14,9 @@
     "leaflet": "^1.9.4",
     "react-dom": "^19.2.1",
     "react": "^19.2.1",
-    "lucide-react": "^0.559.0"
+    "lucide-react": "^0.559.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.2.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

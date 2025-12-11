@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { Locate } from 'lucide-react';
 import { MAP_CENTER } from '../constants';
+import { translations } from '../utils/translations';
 
 // Define Generic Pin Icon (Red)
 const pinIcon = L.divIcon({
@@ -42,12 +44,49 @@ const AutoLocate: React.FC = () => {
     return null;
 };
 
+const LocateControl: React.FC<{ lang: 'fa' | 'en' }> = ({ lang }) => {
+  const map = useMap();
+  const t = translations[lang];
+
+  const handleLocate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!navigator.geolocation) {
+       alert("Geolocation not supported");
+       return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map.flyTo([latitude, longitude], 15);
+      },
+      (err) => {
+        console.error(err);
+        alert(lang === 'fa' ? 'دسترسی به موقعیت مکانی امکان‌پذیر نیست' : 'Could not get your location');
+      }
+    );
+  };
+  return (
+    <div className="absolute bottom-3 right-3 z-[1000]">
+      <button 
+        onClick={handleLocate}
+        type="button"
+        className="bg-white/90 backdrop-blur text-blue-600 p-2 rounded-xl shadow-lg hover:scale-105 transition-all border border-blue-100"
+        title={t.locateMe}
+      >
+        <Locate className="w-5 h-5" />
+      </button>
+    </div>
+  );
+};
+
 export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({ location, onLocationSelect, lang }) => {
   return (
     <div className="h-48 w-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 relative z-0 mt-2">
       <MapContainer center={MAP_CENTER} zoom={12} className="h-full w-full">
         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
         <AutoLocate />
+        <LocateControl lang={lang} />
         <MapEvents onLocationSelect={onLocationSelect} />
 
         {location && (

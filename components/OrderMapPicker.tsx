@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { Locate } from 'lucide-react';
 import { MAP_CENTER } from '../constants';
+import { translations } from '../utils/translations';
 
 // Define Icons
 const createColorIcon = (color: string) => {
@@ -51,38 +53,48 @@ const AutoLocate: React.FC = () => {
     return null;
 };
 
+const LocateControl: React.FC<{ lang: 'fa' | 'en' }> = ({ lang }) => {
+  const map = useMap();
+  const t = translations[lang];
+
+  const handleLocate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!navigator.geolocation) {
+       alert("Geolocation not supported");
+       return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map.flyTo([latitude, longitude], 15);
+      },
+      (err) => {
+        console.error(err);
+        alert(lang === 'fa' ? 'دسترسی به موقعیت مکانی امکان‌پذیر نیست' : 'Could not get your location');
+      }
+    );
+  };
+  return (
+    <div className="absolute bottom-3 right-3 z-[1000]">
+      <button 
+        onClick={handleLocate}
+        type="button"
+        className="bg-white/90 backdrop-blur text-blue-600 p-2 rounded-xl shadow-lg hover:scale-105 transition-all border border-blue-100"
+        title={t.locateMe}
+      >
+        <Locate className="w-5 h-5" />
+      </button>
+    </div>
+  );
+};
+
 export const OrderMapPicker: React.FC<OrderMapPickerProps> = ({ pickup, dropoff, mode, onSetLocation, lang }) => {
   
-  // Auto-switch mode logic: If pickup is set, and we were in pickup mode (or no mode), switch to dropoff automatically to help flow.
-  // We use a local state to track if we've already tried to set initial mode
   const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-      // If just mounted and no pickup, hint to set pickup?
-      // Actually, standard behavior: if user hasn't clicked anything, maybe don't force mode, 
-      // but the request implies a flow: "First select origin... then destination".
-      // We can rely on the parent updating 'mode', or we can trigger it here if the parent doesn't control mode tightly.
-      // Assuming parent controls `mode` via state passed in.
-      
-      // However, to satisfy "First select origin... then destination", let's assume when a user clicks the map for Pickup,
-      // the parent updates `pickup` prop. We detect that change here and ask parent to switch mode? 
-      // This component is controlled, so it can't switch the mode prop directly if it's passed down.
-      // But we can assume the Parent (App.tsx) handles the button clicks.
-      
-      // The requirement "In the customer registration... first select origin... then destination" 
-      // implies the map should guide this.
-      
-      // Since `mode` is passed as a prop, the parent (App.tsx) is responsible.
-      // Let's modify App.tsx (in the prompt's context, I am editing OrderMapPicker, I can't easily change App.tsx logic from here without changing App.tsx).
-      // But wait, I AM changing App.tsx in my thought process? No, I am editing OrderMapPicker.
-      
-      // Actually, I can't change the `mode` prop from here. 
-      // I will add a visual hint here and trust the user uses the buttons OR I trigger a callback if possible.
-      // But `onSetLocation` only sets coordinates.
-      
-      // Let's just implement the AutoLocate and visualization here. 
-      // The logic for "First select origin" is implicit in how the user uses the form.
-      // BUT, if I want to enforce it, I can add a text overlay.
+      // Logic handled in App.tsx
   }, [pickup, dropoff]);
 
   return (
@@ -90,6 +102,7 @@ export const OrderMapPicker: React.FC<OrderMapPickerProps> = ({ pickup, dropoff,
       <MapContainer center={MAP_CENTER} zoom={12} className="h-full w-full">
         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
         <AutoLocate />
+        <LocateControl lang={lang} />
         <MapEvents mode={mode} onSetLocation={onSetLocation} />
 
         {pickup && (

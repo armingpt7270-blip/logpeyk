@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ride, RideStatus, Driver } from '../types';
-import { User, Clock, AlertCircle, ArrowRight } from 'lucide-react';
+import { User, Clock, AlertCircle, ArrowRight, Banknote } from 'lucide-react';
 import { suggestDriverWithAI } from '../services/geminiService';
 import { translations } from '../utils/translations';
 
@@ -28,6 +28,10 @@ export const RideList: React.FC<RideListProps> = ({ rides, drivers, onAssignDriv
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('fa-IR');
+  };
+
   if (rides.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-48 text-slate-400 dark:text-slate-500 opacity-60">
@@ -52,11 +56,16 @@ export const RideList: React.FC<RideListProps> = ({ rides, drivers, onAssignDriv
                    <span className="text-[10px] text-slate-400 font-mono tracking-widest">#{ride.id.slice(-6).toUpperCase()}</span>
                </div>
             </div>
-            <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-sm backdrop-blur-md
-              ${ride.status === RideStatus.PENDING ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 
-                ride.status === RideStatus.IN_PROGRESS ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-500/10 text-slate-500'}`}>
-              {t.status[ride.status]}
-            </span>
+            <div className="flex flex-col items-end gap-1">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-sm backdrop-blur-md
+                  ${ride.status === RideStatus.PENDING ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 
+                    ride.status === RideStatus.IN_PROGRESS ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20' : 'bg-slate-500/10 text-slate-500'}`}>
+                  {t.status[ride.status]}
+                </span>
+                <span className="flex items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-800/50 px-2 py-0.5 rounded-lg">
+                   {formatCurrency(ride.price)} تومان
+                </span>
+            </div>
           </div>
 
           <div className="space-y-2 mb-5 bg-white/50 dark:bg-slate-950/30 p-4 rounded-2xl border border-white/20 dark:border-white/5">

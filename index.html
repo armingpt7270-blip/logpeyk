@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
       window.onerror = function (message, source, lineno, colno, error) {
-        // Suppress ResizeObserver loop limit exceeded error which is common in Map apps
         if (message.includes('ResizeObserver loop')) return true;
         
         document.body.innerHTML = '<div style="color:red; padding:20px; font-size:20px; font-family:monospace; background:white; direction: ltr; text-align: left; z-index: 9999; position: fixed; top:0; left:0; width:100%; height:100%;">' +
@@ -27,11 +26,12 @@
               sans: ['Vazirmatn', 'sans-serif'],
             },
             colors: {
-              glass: {
-                100: 'rgba(255, 255, 255, 0.1)',
-                200: 'rgba(255, 255, 255, 0.2)',
-                300: 'rgba(255, 255, 255, 0.3)',
-                dark: 'rgba(15, 23, 42, 0.6)',
+              primary: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
               }
             },
             animation: {
@@ -65,8 +65,11 @@
     <style>
       body {
         font-family: 'Vazirmatn', sans-serif;
-        background-color: #0f172a;
+        /* Lighter, happier gradient background */
+        background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #f0f9ff 100%);
+        min-height: 100vh;
       }
+      
       /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 6px;
@@ -76,11 +79,11 @@
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.5);
+        background: rgba(59, 130, 246, 0.3);
         border-radius: 10px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 0.8);
+        background: rgba(59, 130, 246, 0.6);
       }
       
       .leaflet-container {
@@ -90,13 +93,11 @@
         border-radius: 1rem;
       }
 
-      /* Fix for custom icons in Leaflet */
       .custom-div-icon, .custom-pin-icon {
         background: transparent;
         border: none;
       }
       
-      /* Sidebar transition logic */
       .sidebar-transition {
         transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       }
@@ -113,54 +114,51 @@
         transform: translateX(0);
       }
 
-      /* Advanced Glassmorphism */
+      /* Lighter Glassmorphism */
       .glass-panel {
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
       }
       
       .dark .glass-panel {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
       }
 
       .glass-card {
-        background: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.6);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.6);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .dark .glass-card {
-        background: rgba(30, 41, 59, 0.4);
+        background: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
       }
 
       .glass-card:hover {
-        transform: translateY(-2px);
-        background: rgba(255, 255, 255, 0.6);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.15);
+        border-color: #fff;
       }
       
       .dark .glass-card:hover {
-        background: rgba(30, 41, 59, 0.6);
+        background: rgba(30, 41, 59, 0.8);
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
       }
 
-      /* Animated Background */
+      /* Animated Background for decorative elements */
       .animated-bg {
-        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background: linear-gradient(-45deg, #6ee7b7, #3b82f6, #9333ea, #ec4899);
         background-size: 400% 400%;
         animation: gradient-x 15s ease infinite;
-      }
-      
-      .dark .animated-bg {
-        background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
       }
     </style>
   <script type="importmap">
@@ -182,7 +180,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
+  <body class="text-slate-800 font-sans antialiased overflow-hidden transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 selection:bg-blue-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

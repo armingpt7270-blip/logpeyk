@@ -6,18 +6,21 @@ import { Driver, Ride, DriverStatus, RideStatus } from '../types';
 import { MAP_CENTER } from '../constants';
 import { translations } from '../utils/translations';
 
-// Fix Leaflet default icon issue
-const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
-const iconShadowUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
+// Safer Icon Initialization
+const initLeafletIcons = () => {
+    try {
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+    } catch (e) {
+        console.warn("Leaflet icon init warning:", e);
+    }
+};
 
-let DefaultIcon = L.icon({
-    iconUrl: iconUrl,
-    shadowUrl: iconShadowUrl,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
+initLeafletIcons();
 
 // Custom Icons
 const createCustomIcon = (color: string) => {

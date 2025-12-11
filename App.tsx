@@ -23,7 +23,8 @@ import {
   Menu,
   ChevronRight,
   DollarSign,
-  Activity
+  Activity,
+  X
 } from 'lucide-react';
 
 import { Ride, Driver, RideStatus, DriverStatus, Customer, Store } from './types';
@@ -491,45 +492,81 @@ function App() {
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/30 rounded-full blur-[100px] animate-blob mix-blend-multiply dark:mix-blend-overlay"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-pink-500/30 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply dark:mix-blend-overlay"></div>
 
-      {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-20 lg:w-72 h-[calc(100vh-2rem)] m-4 glass-panel rounded-[2rem] shadow-2xl z-20 transition-all duration-300">
-        <div className="h-24 flex items-center justify-center lg:justify-start lg:px-8">
-            <div className="bg-gradient-to-tr from-indigo-600 to-purple-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30">
+      {/* Desktop Sidebar (Hover Expandable) */}
+      <aside className={`hidden md:flex flex-col h-[calc(100vh-2rem)] m-4 glass-panel rounded-[2rem] shadow-2xl z-20 sidebar-transition group overflow-hidden absolute ${isRTL ? 'right-0' : 'left-0'} w-20 hover:w-72`}>
+        <div className="h-24 flex items-center justify-start px-6 shrink-0">
+            <div className="bg-gradient-to-tr from-indigo-600 to-purple-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30 shrink-0">
                  <Car className="w-6 h-6 text-white" />
             </div>
-            <span className="font-black text-xl text-slate-800 dark:text-white hidden lg:block tracking-tight ml-4 mr-4">RiderAI</span>
+            <span className="font-black text-xl text-slate-800 dark:text-white tracking-tight mx-4 sidebar-text">RiderAI</span>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-x-hidden">
            {navItems.map(item => (
              <button
                key={item.id}
                onClick={() => setActiveTab(item.id as any)}
-               className={`w-full flex items-center p-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-slate-800/40'}`}
+               className={`w-full flex items-center p-3.5 rounded-2xl transition-all duration-300 relative overflow-hidden shrink-0 ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-slate-800/40'}`}
              >
-                <item.icon className={`w-6 h-6 z-10 ${isRTL ? 'ml-3' : 'mr-3'} ${activeTab === item.id ? 'animate-pulse' : ''}`} />
-                <span className="font-bold text-sm hidden lg:block z-10">{item.label}</span>
+                <item.icon className={`w-6 h-6 z-10 shrink-0 ${activeTab === item.id ? 'animate-pulse' : ''}`} />
+                <span className={`font-bold text-sm z-10 mx-3 sidebar-text`}>{item.label}</span>
                 {activeTab === item.id && <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-100 z-0"></div>}
              </button>
            ))}
         </nav>
 
-        <div className="p-4 mt-auto">
-            <button onClick={handleLogout} className="w-full flex items-center justify-center lg:justify-start p-3.5 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                <LogOut className="w-5 h-5 lg:mr-3 lg:ml-3" />
-                <span className="font-bold text-sm hidden lg:block">{t.logout}</span>
+        <div className="p-4 mt-auto shrink-0">
+            <button onClick={handleLogout} className="w-full flex items-center justify-start p-3.5 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                <LogOut className="w-6 h-6 shrink-0" />
+                <span className="font-bold text-sm mx-3 sidebar-text">{t.logout}</span>
             </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
+      {/* Mobile Drawer Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+            <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+            <div className={`absolute top-0 bottom-0 ${isRTL ? 'right-0' : 'left-0'} w-72 glass-panel shadow-2xl p-6 flex flex-col animate-in slide-in-from-${isRTL ? 'right' : 'left'} duration-300`}>
+                 <div className="flex justify-between items-center mb-8">
+                      <div className="flex items-center gap-3">
+                          <div className="bg-indigo-600 p-2 rounded-xl text-white">
+                              <Car className="w-5 h-5" />
+                          </div>
+                          <h2 className="font-black text-xl dark:text-white">RiderAI</h2>
+                      </div>
+                      <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                          <X className="w-5 h-5 text-slate-500" />
+                      </button>
+                 </div>
+                 <nav className="space-y-2 flex-1">
+                    {navItems.map(item => (
+                        <button
+                        key={item.id}
+                        onClick={() => { setActiveTab(item.id as any); setIsMobileMenuOpen(false); }}
+                        className={`w-full flex items-center p-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 dark:text-slate-400 hover:bg-white/20'}`}
+                        >
+                            <item.icon className="w-5 h-5 ml-3" />
+                            <span className="font-bold">{item.label}</span>
+                        </button>
+                    ))}
+                 </nav>
+                 <button onClick={handleLogout} className="flex items-center p-4 text-red-500 font-bold bg-red-50 dark:bg-red-900/20 rounded-2xl mt-4">
+                     <LogOut className="w-5 h-5 ml-3" />
+                     {t.logout}
+                 </button>
+            </div>
+        </div>
+      )}
+
+      {/* Main Content Area - Adjusted margin for fixed sidebar */}
+      <main className={`flex-1 flex flex-col h-full relative z-10 overflow-hidden transition-all duration-300 ${isRTL ? 'md:mr-24' : 'md:ml-24'}`}>
          {/* Mobile Header */}
          <header className="h-20 flex items-center justify-between px-6 md:px-8 mt-4 md:mt-0">
              <div className="flex items-center gap-4">
-                 <div className="md:hidden bg-white/50 dark:bg-slate-800/50 p-2 rounded-xl backdrop-blur-md border border-white/20">
+                 <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden bg-white/50 dark:bg-slate-800/50 p-2 rounded-xl backdrop-blur-md border border-white/20">
                      <Menu className="w-6 h-6 text-slate-700 dark:text-slate-200" />
-                 </div>
+                 </button>
                  <div>
                     <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight drop-shadow-sm">
                         {activeTab === 'dashboard' ? t.dashboard : activeTab === 'drivers' ? t.drivers : activeTab === 'customers' ? t.customers : activeTab === 'stores' ? t.stores : t.orders}

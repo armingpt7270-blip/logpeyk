@@ -58,6 +58,8 @@ export const translations = {
     phone: 'تلفن',
     owner: 'مدیریت',
     action: 'عملیات',
+    createOrder: 'ثبت سفارش',
+    locationRequired: 'لطفا موقعیت مکانی را روی نقشه مشخص کنید',
     status: {
       PENDING: 'در انتظار',
       ASSIGNED: 'تخصیص یافته',
@@ -145,6 +147,8 @@ export const translations = {
     phone: 'Phone',
     owner: 'Owner',
     action: 'Actions',
+    createOrder: 'Create Order',
+    locationRequired: 'Please select a location on the map',
     status: {
       PENDING: 'Pending',
       ASSIGNED: 'Assigned',

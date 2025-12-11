@@ -18,7 +18,8 @@ import {
   CheckCircle,
   XCircle,
   Power,
-  MapPin
+  MapPin,
+  PlusCircle
 } from 'lucide-react';
 
 import { Ride, Driver, RideStatus, DriverStatus, Customer, Store } from './types';
@@ -358,7 +359,7 @@ function App() {
               <th className="p-4 font-bold">{t.name}</th>
               <th className="p-4 font-bold">{t.phone}</th>
               <th className="p-4 font-bold">{t.address}</th>
-              <th className="p-4 font-bold w-20">{t.action}</th>
+              <th className="p-4 font-bold w-28">{t.action}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -368,6 +369,9 @@ function App() {
                 <td className="p-4 text-slate-600 dark:text-slate-400">{c.phone}</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400 truncate max-w-xs">{c.address}</td>
                 <td className="p-4 flex gap-2 justify-end">
+                   <button onClick={() => openModal('ADD_ORDER', { customerId: c.id, dropoffAddress: c.address })} className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition-colors" title={t.createOrder}>
+                      <PlusCircle className="w-4 h-4" />
+                   </button>
                    <button onClick={() => handleDeleteCustomer(c.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                 </td>
               </tr>

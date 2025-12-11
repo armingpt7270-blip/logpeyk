@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import L from 'leaflet';
 import { translations } from '../utils/translations';
 import { MAP_CENTER } from '../constants';
-import { db } from '../services/database'; // Import Database
+import { db } from '../services/database';
 
 // Fix Leaflet marker icon safely
 const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
@@ -111,7 +111,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
   useEffect(() => {
     const creds = db.getCredentials();
     if (creds) {
-       // Auto-fill logic could go here or direct login in App.tsx
        setUsername(creds.username || '');
     }
   }, []);
@@ -149,27 +148,38 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
     e.preventDefault();
     setError('');
 
-    // Common Validation
-    if (!regData.name || !regData.mobile || !regData.emailOrUser || !regData.password || !regData.address || !regData.location) {
+    // 1. Basic Fields Validation
+    if (!regData.name || !regData.mobile || !regData.emailOrUser || !regData.password || !regData.address) {
       setError(t.fillAll);
       return;
     }
 
+    // 2. Password Match
     if (regData.password !== regData.confirmPassword) {
       setError(t.passwordsNotMatch);
       return;
     }
 
-    // Specific Validation
+    // 3. Location Validation (Crucial fix)
+    if (!regData.location) {
+      setError(t.locationRequired);
+      return;
+    }
+
+    // 4. Role Specific Validation
     if (isDriver) {
-        if (!regData.nationalId || !regData.vehicleType) {
-            setError(t.fillAll);
+        if (!regData.nationalId) {
+            setError(lang === 'fa' ? 'لطفا کد ملی را وارد کنید' : 'Please enter National ID');
             return;
+        }
+        if (!regData.vehicleType) {
+             setError(lang === 'fa' ? 'لطفا نوع وسیله را انتخاب کنید' : 'Please select Vehicle Type');
+             return;
         }
     } else {
         // Store
         if (!regData.ownerName) {
-            setError(t.fillAll);
+             setError(lang === 'fa' ? 'لطفا نام صاحب فروشگاه را وارد کنید' : 'Please enter Owner Name');
             return;
         }
     }
@@ -223,7 +233,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
         <span className="mx-2 text-xs text-slate-500 dark:text-slate-400 select-none">{t.rememberMe}</span>
       </div>
       
-      {error && <p className="text-red-500 text-xs font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">{error}</p>}
+      {error && <p className="text-red-500 text-xs font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 animate-in shake">{error}</p>}
 
       <button type="submit" className="w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 py-3 rounded-xl font-bold shadow-sm transform transition-all duration-200 mt-2">
         {t.login}
@@ -376,8 +386,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
              <textarea rows={2} value={regData.address} onChange={e => setRegData({...regData, address: e.target.value})} className={`w-full py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm dark:text-white ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`} />
           </InputWrapper>
           
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mt-3 mb-1.5 px-1">{t.selectMap}</label>
-          <div className="h-48 w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative z-0">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mt-3 mb-1.5 px-1">{t.selectMap} <span className="text-red-500">*</span></label>
+          <div className={`h-48 w-full rounded-xl overflow-hidden border relative z-0 ${!regData.location ? 'border-red-300 dark:border-red-900' : 'border-slate-200 dark:border-slate-800'}`}>
              <MapContainer center={MAP_CENTER} zoom={13} className="h-full w-full">
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                 <LocationPicker 
@@ -388,13 +398,13 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
              </MapContainer>
              {!regData.location && (
                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-slate-900/10 z-[400]">
-                    <span className="text-xs bg-white/80 px-2 py-1 rounded shadow text-slate-600">{t.selectMap}</span>
+                    <span className="text-xs bg-white/90 px-2 py-1.5 rounded shadow text-red-600 font-bold">{t.selectMap}</span>
                  </div>
              )}
           </div>
       </div>
 
-      {error && <p className="text-red-500 text-xs font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">{error}</p>}
+      {error && <p className="text-red-500 text-xs font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 animate-in shake">{error}</p>}
 
       <button onClick={(e) => handleRegisterSubmit(e, isDriver)} className="w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 py-3 rounded-xl font-bold shadow-sm transition-all duration-200 mt-2">
         {t.submitReg}
@@ -410,7 +420,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin, lang }) => {
          <div className="fixed -top-24 -right-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
          <div className="fixed -bottom-24 -left-24 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-         <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+         <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 overflow-hidden mb-8" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="p-8">
                {/* Logo Header */}
                <div className="text-center mb-8">

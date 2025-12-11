@@ -1,7 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AIParseResult, Driver, Ride } from "../types";
 
+// Initialize the Google GenAI client with process.env.API_KEY as per guidelines
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
 const modelId = "gemini-2.5-flash";
 
 export const parseNaturalLanguageRide = async (text: string): Promise<AIParseResult | null> => {
